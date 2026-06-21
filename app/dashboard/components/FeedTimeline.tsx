@@ -1,4 +1,4 @@
-import type { FeedEvent } from "../page";
+import type { FeedEvent } from "@/lib/types";
 
 const AVATAR_COLORS = [
   "#E6ABE1", "#E8B044", "#F8D5F3", "#925F3A", "#5C8C5A",

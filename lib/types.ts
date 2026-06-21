@@ -225,3 +225,34 @@ export interface SlotPullResult {
   payout_points: number;
   new_balance: number;
 }
+
+// =====================================================
+// Feed events (used by /achievements/feed and the legacy /dashboard)
+// =====================================================
+export type FeedEvent = {
+  id: string;
+  type:
+    | "mission_completed"
+    | "redemption"
+    | "milestone_birthday"
+    | "milestone_anniversary"
+    | "spark_claimed";
+  employee_id: string;
+  employee_name: string;
+  timestamp: string;
+  mission_title?: string;
+  mission_emoji?: string;
+  mission_color?: string;
+  mission_type?: string;
+  proof_url?: string | null;
+  proof_text?: string | null;
+  points?: number;
+  item_name?: string;
+  item_icon?: string;
+  points_spent?: number;
+  peso_value?: number;
+  milestone_points?: number;
+  spark_title?: string;
+  spark_emoji?: string;
+  spark_color?: string;
+};

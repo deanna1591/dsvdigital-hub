@@ -27,7 +27,7 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAuthPath = path.startsWith("/login");
+  const isAuthPath = path.startsWith("/login") || path.startsWith("/setup");
 
   // Not signed in and trying to access protected route → login
   if (!user && !isAuthPath && path !== "/") {
@@ -36,10 +36,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Signed in and on /login → dashboard
-  if (user && isAuthPath) {
+  // Signed in and on /login → today
+  if (user && path.startsWith("/login")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/today";
     return NextResponse.redirect(url);
   }
 

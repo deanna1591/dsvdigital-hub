@@ -14,7 +14,7 @@ import type {
   Mission, MissionSubmission, DailySpark, DailySparkClaim,
   BingoEvent, BingoSquare, BingoClaim, SlotSpin
 } from "@/lib/types";
-import type { FeedEvent } from "../page";
+import type { FeedEvent } from "@/lib/types";
 
 export default function DashboardTabs(props: {
   me: EmployeeBalance;

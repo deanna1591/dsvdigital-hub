@@ -17,12 +17,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq("id", user.id)
     .single();
 
-  if (!me || me.role !== "admin") redirect("/dashboard");
+  if (!me || me.role !== "admin") redirect("/today");
 
   return (
     <>
-      <TopBar me={me as EmployeeBalance} currentView="admin" />
-      <div className="max-w-[1280px] mx-auto px-6 sm:px-8 pt-6">
+      <TopBar me={me as EmployeeBalance} userId={user.id} currentView="admin" />
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 pt-6">
         <AdminNav />
       </div>
       {children}
