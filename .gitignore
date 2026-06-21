@@ -47,3 +47,7 @@ next-env.d.ts
 
 # Test
 coverage/
+
+# Supabase CLI temp files
+supabase/.temp/
+.branches
