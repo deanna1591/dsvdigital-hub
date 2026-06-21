@@ -13,7 +13,7 @@ export default async function CatalogPage() {
     .from("catalog_items")
     .select("*")
     .eq("is_active", true)
-    .order("points_cost", { ascending: true });
+    .order("points", { ascending: true });
 
   const catalog = (data ?? []) as CatalogItem[];
 

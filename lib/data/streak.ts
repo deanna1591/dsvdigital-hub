@@ -44,7 +44,7 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
       .gte("created_at", startISO + "T00:00:00Z"),
     supabase
       .from("mission_submissions")
-      .select("*, mission:missions(title, emoji, default_points)")
+      .select("*, mission:missions(title, cover_emoji, points)")
       .eq("employee_id", userId)
       .gte("created_at", startISO + "T00:00:00Z"),
     supabase
@@ -79,7 +79,7 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
   const missions = (missionsRes.data || []) as Array<{
     created_at: string;
     status: string;
-    mission?: { title: string; emoji: string; default_points: number };
+    mission?: { title: string; cover_emoji: string; points: number };
   }>;
   const points = (pointsRes.data || []) as Array<{
     created_at: string;
@@ -125,10 +125,10 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
   }
   for (const m of missions) {
     push(m.created_at, {
-      icon: m.mission?.emoji ?? "⚡",
+      icon: m.mission?.cover_emoji ?? "⚡",
       title: m.mission?.title ?? "Mission",
       subtitle: m.status === "pending" ? "Submitted, waiting review" : `Mission · ${m.status}`,
-      points: m.mission?.default_points,
+      points: m.mission?.points,
       status: m.status === "pending" ? "pending" : "approved",
       time: formatTime(m.created_at),
     });

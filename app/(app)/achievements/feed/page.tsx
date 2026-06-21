@@ -13,9 +13,9 @@ export default async function FeedPage() {
   const [missionsRes, redemptionsRes, sparksRes, namesRes] = await Promise.all([
     supabase
       .from("mission_submissions")
-      .select("*, mission:missions(title, emoji, cover_color, type)")
+      .select("*, mission:missions(title, cover_emoji, cover_color, mission_type, points)")
       .eq("status", "approved")
-      .order("reviewed_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(20),
     supabase
       .from("redemption_orders")
@@ -27,7 +27,7 @@ export default async function FeedPage() {
       .from("daily_spark_claims")
       .select("*, spark:daily_sparks(title, emoji, color, points)")
       .eq("status", "approved")
-      .order("reviewed_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(15),
     supabase.from("profiles").select("id, name"),
   ]);
@@ -43,23 +43,22 @@ export default async function FeedPage() {
     employee_id: string;
     proof_url: string | null;
     proof_text: string | null;
-    points_awarded: number;
-    reviewed_at: string;
-    mission?: { title: string; emoji: string; cover_color: string; type: string };
+    updated_at: string;
+    mission?: { title: string; cover_emoji: string; cover_color: string; mission_type: string; points: number };
   }>) {
     events.push({
       id: "m_" + m.id,
       type: "mission_completed",
       employee_id: m.employee_id,
       employee_name: nameMap.get(m.employee_id) ?? "Teammate",
-      timestamp: m.reviewed_at,
+      timestamp: m.updated_at,
       mission_title: m.mission?.title,
-      mission_emoji: m.mission?.emoji,
+      mission_emoji: m.mission?.cover_emoji,
       mission_color: m.mission?.cover_color,
-      mission_type: m.mission?.type,
+      mission_type: m.mission?.mission_type,
       proof_url: m.proof_url,
       proof_text: m.proof_text,
-      points: m.points_awarded,
+      points: m.mission?.points,
     });
   }
 
@@ -88,7 +87,7 @@ export default async function FeedPage() {
   for (const s of (sparksRes.data ?? []) as Array<{
     id: string;
     employee_id: string;
-    reviewed_at: string;
+    updated_at: string;
     spark?: { title: string; emoji: string; color: string; points: number };
   }>) {
     events.push({
@@ -96,7 +95,7 @@ export default async function FeedPage() {
       type: "spark_claimed",
       employee_id: s.employee_id,
       employee_name: nameMap.get(s.employee_id) ?? "Teammate",
-      timestamp: s.reviewed_at,
+      timestamp: s.updated_at,
       spark_title: s.spark?.title,
       spark_emoji: s.spark?.emoji,
       spark_color: s.spark?.color,
