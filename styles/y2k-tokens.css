@@ -1,0 +1,94 @@
+/* =====================================================
+   Y2K Design Tokens — paste into app/globals.css
+   ===================================================== */
+
+:root {
+  /* Palette */
+  --cotton: #F4EBE8;       /* main background */
+  --paper:  #F5F5F5;       /* card background (platinum) */
+  --ink:    #272727;       /* dark text */
+  --graphite: #272727;     /* alias for ink */
+  --ink-soft: #5a5a5a;     /* secondary text */
+  --ink-faint: #8a8a8a;    /* tertiary text */
+  --lavender: #E6ABE1;     /* primary accent */
+  --goldrush: #E8B044;     /* CTA + earned points */
+  --accent-2: #E8B044;     /* alias */
+  --bubblegum: #F8D5F3;    /* soft pink tint */
+  --bronze: #925F3A;       /* deep accent */
+  --line: #E0DCD3;         /* ivory border */
+  --frost: #ECEBE7;        /* very light gray tint */
+  --cream: #FAF6F0;        /* card highlight bg */
+
+  /* Status colors */
+  --good: #5C8C5A;
+  --warn: #C7892A;
+  --error: #B04D45;
+
+  /* Shadows (Y2K chunky) */
+  --shadow-sm: 2px 2px 0 var(--graphite);
+  --shadow:    3px 3px 0 var(--graphite);
+  --shadow-lg: 4px 4px 0 var(--graphite);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  /* Fonts */
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+}
+
+html, body {
+  background: var(--cotton);
+  color: var(--graphite);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+/* Chunky button base */
+.btn-y2k {
+  background: var(--graphite);
+  color: var(--paper);
+  border: 1.5px solid var(--graphite);
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow);
+  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+}
+.btn-y2k:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--graphite); }
+.btn-y2k:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--graphite); }
+.btn-y2k.primary { background: var(--goldrush); color: var(--graphite); }
+.btn-y2k.lavender { background: var(--lavender); color: var(--graphite); }
+
+/* Y2K card */
+.card-y2k {
+  background: var(--paper);
+  border: 1.5px solid var(--graphite);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+/* Section headers */
+.admin-section-h2 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  margin-top: 40px;
+  margin-bottom: 4px;
+  color: var(--graphite);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

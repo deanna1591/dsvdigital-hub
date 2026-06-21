@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================
+   Y2K design tokens (matches the mockup palette)
+   ===================================================== */
+:root {
+  --cotton: #F4EBE8;
+  --paper:  #F5F5F5;
+  --cream:  #FAF6F0;
+  --ink:    #272727;
+  --graphite: #272727;
+  --ink-soft: #5a5a5a;
+  --ink-faint: #8a8a8a;
+  --lavender: #E6ABE1;
+  --goldrush: #E8B044;
+  --bubblegum: #F8D5F3;
+  --bronze: #925F3A;
+  --line: #E0DCD3;
+  --frost: #ECEBE7;
+  --good: #5C8C5A;
+  --warn: #C7892A;
+  --error: #B04D45;
+}
+
+@layer base {
+  html, body {
+    background: var(--cotton);
+    color: var(--graphite);
+  }
+}
+
+@layer components {
+  /* Chunky Y2K buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition-all bg-graphite text-paper border-[1.5px] border-graphite disabled:bg-ink-faint disabled:cursor-not-allowed;
+    box-shadow: 3px 3px 0 var(--graphite);
+  }
+  .btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--graphite); }
+  .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--graphite); }
+  .btn-sm { @apply px-3 py-1.5 text-xs; }
+  .btn-ghost {
+    @apply bg-transparent text-graphite border-[1.5px] border-graphite;
+    box-shadow: none;
+  }
+  .btn-ghost:hover { background: var(--cream); transform: none; box-shadow: none; }
+  .btn-primary { background: var(--goldrush); color: var(--graphite); }
+  .btn-lavender { background: var(--lavender); color: var(--graphite); }
+  .btn-good { background: var(--good); color: var(--paper); }
+  .btn-warn { background: var(--warn); color: var(--paper); }
+
+  /* Inputs */
+  .input {
+    @apply w-full px-3 py-2.5 border-[1.5px] border-graphite rounded-lg bg-paper text-graphite text-sm focus:outline-none focus:ring-2 focus:ring-lavender;
+  }
+  .label {
+    @apply block text-[11px] tracking-[0.12em] uppercase font-bold text-ink-soft mb-1.5;
+  }
+  .textarea {
+    @apply w-full px-3 py-2.5 border-[1.5px] border-graphite rounded-lg bg-paper text-graphite text-sm focus:outline-none focus:ring-2 focus:ring-lavender resize-y;
+  }
+
+  /* Y2K cards */
+  .card {
+    @apply bg-paper border-[1.5px] border-graphite rounded-y2k p-5;
+    box-shadow: 3px 3px 0 var(--graphite);
+  }
+
+  /* Pills */
+  .pill {
+    @apply inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold;
+  }
+  .pill-pending    { background: var(--bubblegum); color: var(--graphite); }
+  .pill-processing { background: var(--frost); color: var(--graphite); }
+  .pill-delivered  { background: var(--good); color: var(--paper); }
+  .pill-rejected   { background: var(--error); color: var(--paper); }
+  .pill-good       { background: var(--good); color: var(--paper); }
+
+  /* Admin section headers */
+  .admin-section-h2 {
+    @apply text-2xl font-serif font-semibold mt-10 mb-1 text-graphite flex items-center gap-2;
+  }
+}
