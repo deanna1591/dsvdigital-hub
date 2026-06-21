@@ -103,7 +103,7 @@ export default function CatalogManager({ items }: { items: CatalogItem[] }) {
         <button className="btn" onClick={openAdd}>+ Add New Item</button>
       </div>
 
-      <div className="bg-paper border border-line rounded-xl overflow-hidden">
+      <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
         <table className="w-full">
           <thead className="bg-cream border-b-[1.5px] border-ink">
             <tr>

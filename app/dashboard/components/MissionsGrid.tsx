@@ -90,7 +90,7 @@ export default function MissionsGrid({
 
   if (missions.length === 0) {
     return (
-      <div className="bg-paper border border-line rounded-xl p-12 text-center">
+      <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-12 text-center">
         <div className="text-5xl mb-3">🎯</div>
         <p className="text-ink-soft">No missions available right now. Check back soon!</p>
       </div>
@@ -157,8 +157,8 @@ function MissionCard({
     <button
       onClick={onClick}
       disabled={!!pendingSubmission || atLimit}
-      className={`text-left rounded-xl overflow-hidden border-[1.5px] border-ink shadow-[4px_4px_0_#1f2238] transition-all ${
-        pendingSubmission || atLimit ? "opacity-70 cursor-not-allowed" : "hover:-translate-y-1 hover:shadow-[6px_6px_0_#1f2238] cursor-pointer"
+      className={`text-left rounded-xl overflow-hidden border-[1.5px] border-ink shadow-[4px_4px_0_#272727] transition-all ${
+        pendingSubmission || atLimit ? "opacity-70 cursor-not-allowed" : "hover:-translate-y-1 hover:shadow-[6px_6px_0_#272727] cursor-pointer"
       }`}
     >
       <div className="relative h-44 p-5 text-white flex flex-col justify-between" style={{ background: gradient }}>

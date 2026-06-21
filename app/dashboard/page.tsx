@@ -141,10 +141,14 @@ export default async function DashboardPage() {
 
   if (!me) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-ink-soft mb-2">Setting up your profile...</p>
-          <p className="text-xs text-ink-faint">If this persists, contact HR.</p>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-cotton">
+        <div className="bg-paper border-[1.5px] border-graphite rounded-y2k p-8 max-w-md text-center shadow-[3px_3px_0_#E6ABE1]">
+          <div className="text-4xl mb-3">👋</div>
+          <h2 className="font-serif text-xl font-semibold mb-2">Setting up your profile...</h2>
+          <p className="text-sm text-ink-soft mb-4">If this persists, contact HR to activate your account.</p>
+          <form action={"/auth/signout"} method="post" className="inline-block">
+            <button type="submit" className="text-xs text-ink-soft hover:text-graphite font-semibold underline">Sign out</button>
+          </form>
         </div>
       </div>
     );

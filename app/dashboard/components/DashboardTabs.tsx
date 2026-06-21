@@ -58,48 +58,48 @@ export default function DashboardTabs(props: {
 
   return (
     <>
-      <div className="flex gap-1 border-b-[1.5px] border-ink mb-7 -mb-[1.5px] overflow-x-auto">
+      <div className="flex gap-1 sm:gap-2 border-b-[1.5px] border-graphite mb-7 -mb-[1.5px] overflow-x-auto scrollbar-thin">
         <TabBtn active={tab === "today"} onClick={() => setTab("today")}>
           ✨ Today
           {todayPending && (
-            <span className="ml-1.5 inline-block bg-accent-2 text-paper text-[10px] px-1.5 py-0.5 rounded-xl font-bold animate-pulse">!</span>
+            <span className="ml-1.5 inline-block bg-goldrush text-graphite text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse border border-graphite">!</span>
           )}
         </TabBtn>
         <TabBtn active={tab === "slots"} onClick={() => setTab("slots")}>
-          🎰 Slots
+          💿 Slots
           {spinBalance > 0 && (
-            <span className="ml-1.5 inline-block bg-pink-500 text-white text-[10px] px-1.5 py-0.5 rounded-xl font-bold">
+            <span className="ml-1.5 inline-block bg-bubblegum text-graphite text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-graphite">
               {spinBalance}
             </span>
           )}
         </TabBtn>
         <TabBtn active={tab === "feed"} onClick={() => setTab("feed")}>
-          📣 Feed
+          📺 Feed
           {feed.length > 0 && (
-            <span className="ml-1.5 inline-block bg-good text-paper text-[10px] px-1.5 py-0.5 rounded-xl font-bold">{feed.length}</span>
+            <span className="ml-1.5 inline-block bg-good text-paper text-[10px] px-1.5 py-0.5 rounded-full font-bold">{feed.length}</span>
           )}
         </TabBtn>
         {activeBingo && (
-          <TabBtn active={tab === "bingo"} onClick={() => setTab("bingo")}>🎯 Bingo</TabBtn>
+          <TabBtn active={tab === "bingo"} onClick={() => setTab("bingo")}>🎲 Bingo</TabBtn>
         )}
         <TabBtn active={tab === "missions"} onClick={() => setTab("missions")}>
-          🚀 Missions
+          ⚡ Missions
           {availableMissionCount > 0 && (
-            <span className="ml-1.5 inline-block bg-accent-2 text-paper text-[10px] px-1.5 py-0.5 rounded-xl font-bold">
+            <span className="ml-1.5 inline-block bg-goldrush text-graphite text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-graphite">
               {availableMissionCount}
             </span>
           )}
         </TabBtn>
-        <TabBtn active={tab === "catalog"} onClick={() => setTab("catalog")}>Redeem Catalog</TabBtn>
+        <TabBtn active={tab === "catalog"} onClick={() => setTab("catalog")}>💸 Catalog</TabBtn>
         <TabBtn active={tab === "orders"} onClick={() => setTab("orders")}>
-          My Orders
+          📦 Orders
           {(pendingCount + pendingSubsCount) > 0 && (
-            <span className="ml-1.5 inline-block bg-accent-2 text-paper text-[10px] px-1.5 py-0.5 rounded-xl font-bold">
+            <span className="ml-1.5 inline-block bg-goldrush text-graphite text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-graphite">
               {pendingCount + pendingSubsCount}
             </span>
           )}
         </TabBtn>
-        <TabBtn active={tab === "activity"} onClick={() => setTab("activity")}>My Points</TabBtn>
+        <TabBtn active={tab === "activity"} onClick={() => setTab("activity")}>📊 My Points</TabBtn>
       </div>
 
       {tab === "today" && (
@@ -136,8 +136,8 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return (
     <button
       onClick={onClick}
-      className={`px-5 py-3 text-sm font-semibold border-b-[3px] -mb-[1.5px] transition-colors whitespace-nowrap ${
-        active ? "text-ink border-accent-2" : "text-ink-soft border-transparent hover:text-ink"
+      className={`px-4 sm:px-5 py-3 text-sm font-bold border-b-[3px] -mb-[1.5px] transition-all whitespace-nowrap ${
+        active ? "text-graphite border-goldrush" : "text-ink-soft border-transparent hover:text-graphite hover:border-line"
       }`}
     >
       {children}

@@ -71,7 +71,7 @@ export default async function AdminOperationsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-7">
         <div className="space-y-6">
           {activityClaims.length > 0 && (
-            <div className="bg-paper border border-line rounded-xl overflow-hidden">
+            <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
               <div className="px-5 py-4 border-b-[1.5px] border-ink bg-cream flex items-center justify-between">
                 <h3 className="font-serif text-lg font-semibold">Daily Spark & Bingo Claims</h3>
                 <span className="pill pill-pending">{activityClaims.length} pending</span>
@@ -80,7 +80,7 @@ export default async function AdminOperationsPage() {
             </div>
           )}
 
-          <div className="bg-paper border border-line rounded-xl overflow-hidden">
+          <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
             <div className="px-5 py-4 border-b-[1.5px] border-ink bg-cream flex items-center justify-between">
               <h3 className="font-serif text-lg font-semibold">Mission Submissions</h3>
               {submissionsEnriched.length > 0 && (
@@ -90,7 +90,7 @@ export default async function AdminOperationsPage() {
             <MissionSubmissionsTable submissions={submissionsEnriched} />
           </div>
 
-          <div className="bg-paper border border-line rounded-xl overflow-hidden">
+          <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
             <div className="px-5 py-4 border-b-[1.5px] border-ink bg-cream flex items-center justify-between">
               <h3 className="font-serif text-lg font-semibold">Pending Redemptions</h3>
               {pendingEnriched.length > 0 && (
@@ -100,7 +100,7 @@ export default async function AdminOperationsPage() {
             <PendingTable orders={pendingEnriched} />
           </div>
 
-          <div className="bg-paper border border-line rounded-xl overflow-hidden">
+          <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
             <div className="px-5 py-4 border-b-[1.5px] border-ink bg-cream">
               <h3 className="font-serif text-lg font-semibold">Recently Processed</h3>
             </div>
@@ -109,14 +109,14 @@ export default async function AdminOperationsPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-paper border border-line rounded-xl overflow-hidden">
+          <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
             <div className="px-5 py-4 border-b-[1.5px] border-ink bg-cream">
               <h3 className="font-serif text-lg font-semibold">Award Points</h3>
             </div>
             <AwardPointsForm employees={balances} categories={categories} />
           </div>
 
-          <div className="bg-paper border border-line rounded-xl overflow-hidden">
+          <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
             <div className="px-5 py-4 border-b-[1.5px] border-ink bg-cream">
               <h3 className="font-serif text-lg font-semibold">Team Balances</h3>
             </div>

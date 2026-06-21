@@ -33,7 +33,7 @@ export default function CatalogGrid({ catalog, balance }: { catalog: CatalogItem
           return (
             <div
               key={item.id}
-              className="bg-paper border border-line rounded-xl p-5 transition-all hover:border-ink hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(31,34,56,0.08)] flex flex-col"
+              className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-5 transition-all hover:border-ink hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(31,34,56,0.08)] flex flex-col"
             >
               <div className="text-[44px] leading-none mb-3">{item.icon}</div>
               <h3 className="font-serif text-[17px] font-semibold leading-tight mb-1">{item.name}</h3>

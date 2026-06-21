@@ -1,8 +1,8 @@
 import type { FeedEvent } from "../page";
 
 const AVATAR_COLORS = [
-  "#4ba3a3", "#d97435", "#c95d8f", "#4a7a9e", "#7a9568",
-  "#9b80b8", "#e8a635", "#d65a5a", "#2f6650", "#a07050"
+  "#E6ABE1", "#E8B044", "#F8D5F3", "#925F3A", "#5C8C5A",
+  "#C7892A", "#B04D45", "#ECEBE7", "#FAF6F0", "#272727"
 ];
 
 function avatarColor(name: string): string {
@@ -27,7 +27,7 @@ function timeAgo(dateStr: string): string {
 export default function FeedTimeline({ events, currentUserName }: { events: FeedEvent[]; currentUserName: string }) {
   if (events.length === 0) {
     return (
-      <div className="bg-paper border border-line rounded-xl p-16 text-center">
+      <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-16 text-center">
         <div className="text-5xl mb-3">📭</div>
         <p className="font-serif text-xl font-semibold mb-1">No activity yet</p>
         <p className="text-ink-soft text-sm">When teammates complete missions or redeem rewards, you'll see it here.</p>
@@ -55,7 +55,7 @@ function FeedCard({ event, isOwn }: { event: FeedEvent; isOwn: boolean }) {
   const firstName = event.employee_name.split(" ")[0];
 
   return (
-    <article className={`bg-paper border border-line rounded-xl p-5 ${isOwn ? "ring-2 ring-accent-2/30" : ""}`}>
+    <article className={`bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-5 ${isOwn ? "ring-2 ring-accent-2/30" : ""}`}>
       <header className="flex items-start gap-3 mb-3">
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
@@ -140,7 +140,7 @@ function FeedContent({ event }: { event: FeedEvent }) {
   // Mission with text proof — show the story content
   if (event.type === "mission_completed" && event.proof_text && event.mission_type === "custom") {
     return (
-      <div className="bg-cream rounded-lg p-4 text-sm italic leading-relaxed border-l-4" style={{ borderColor: event.mission_color || "#4ba3a3" }}>
+      <div className="bg-cream rounded-lg p-4 text-sm italic leading-relaxed border-l-4" style={{ borderColor: event.mission_color || "#E6ABE1" }}>
         "{event.proof_text}"
       </div>
     );
@@ -159,7 +159,7 @@ function FeedContent({ event }: { event: FeedEvent }) {
           <div className="flex items-center gap-3">
             <span
               className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
-              style={{ background: event.mission_color || "#4ba3a3", color: "white" }}
+              style={{ background: event.mission_color || "#E6ABE1", color: "white" }}
             >
               📷
             </span>
@@ -179,7 +179,7 @@ function FeedContent({ event }: { event: FeedEvent }) {
     return (
       <div
         className="rounded-lg p-5 flex items-center gap-4"
-        style={{ background: "linear-gradient(135deg, #fbf6e9 0%, #f6efe1 100%)" }}
+        style={{ background: "linear-gradient(135deg, var(--cream) 0%, var(--cotton) 100%)" }}
       >
         <div className="text-5xl">{event.item_icon}</div>
         <div>

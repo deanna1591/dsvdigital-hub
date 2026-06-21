@@ -47,7 +47,7 @@ function inputToRow(input: MissionInput) {
     mission_type: input.mission_type,
     platform: input.platform.trim() || null,
     proof_type: input.proof_type,
-    cover_color: input.cover_color || "#4ba3a3",
+    cover_color: input.cover_color || "#E6ABE1",
     cover_emoji: input.cover_emoji || "🎯",
     external_link: input.external_link.trim() || null,
     instructions: input.instructions.trim() || null,

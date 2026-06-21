@@ -138,14 +138,14 @@ export default function ActivityClaimsTable({ claims }: { claims: Enriched[] }) 
               <div>
                 <div className="label">Submitted Proof</div>
                 {reviewing.proof_url && (
-                  <div className="bg-paper border border-line rounded p-3 break-all">
+                  <div className="bg-cream border-[1.5px] border-line rounded-lg p-3 break-all">
                     <a href={reviewing.proof_url} target="_blank" rel="noopener noreferrer" className="text-accent text-sm hover:underline">
                       ↗ {reviewing.proof_url}
                     </a>
                   </div>
                 )}
                 {reviewing.proof_text && (
-                  <div className="bg-paper border border-line rounded p-3 text-sm whitespace-pre-wrap">{reviewing.proof_text}</div>
+                  <div className="bg-cream border-[1.5px] border-line rounded-lg p-3 text-sm whitespace-pre-wrap">{reviewing.proof_text}</div>
                 )}
                 {!reviewing.proof_url && !reviewing.proof_text && (
                   <div className="text-xs text-ink-faint italic">No proof submitted</div>

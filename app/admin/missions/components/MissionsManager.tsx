@@ -6,16 +6,16 @@ import type { Mission, MissionType, ProofType } from "@/lib/types";
 import { addMission, updateMission, toggleMissionActive, deleteMission, type MissionInput } from "../actions";
 
 const COLOR_PRESETS = [
-  { name: "Teal", hex: "#4ba3a3" },
-  { name: "Coral", hex: "#d97435" },
-  { name: "Rose", hex: "#d65a5a" },
-  { name: "Forest", hex: "#2f6650" },
-  { name: "Royal", hex: "#9b80b8" },
-  { name: "Sunshine", hex: "#e8a635" },
-  { name: "Pink", hex: "#c95d8f" },
-  { name: "Ocean", hex: "#4a7a9e" },
-  { name: "Earth", hex: "#a07050" },
-  { name: "Ink", hex: "#1f2238" },
+  { name: "Lavender",  hex: "#E6ABE1" },
+  { name: "Goldrush",  hex: "#E8B044" },
+  { name: "Bubblegum", hex: "#F8D5F3" },
+  { name: "Bronze",    hex: "#925F3A" },
+  { name: "Frost",     hex: "#ECEBE7" },
+  { name: "Cotton",    hex: "#F4EBE8" },
+  { name: "Sage",      hex: "#5C8C5A" },
+  { name: "Warmgold",  hex: "#C7892A" },
+  { name: "Rose",      hex: "#B04D45" },
+  { name: "Graphite",  hex: "#272727" },
 ];
 
 const EMOJI_SUGGESTIONS = ["🎯", "⭐", "🚪", "📷", "💼", "👥", "🎬", "📸", "📝", "🎙️", "📊", "🎁", "💬", "🏆", "🚀"];
@@ -55,7 +55,7 @@ const EMPTY: MissionInput = {
   mission_type: "custom",
   platform: "",
   proof_type: "url",
-  cover_color: "#4ba3a3",
+  cover_color: "#E6ABE1",
   cover_emoji: "🎯",
   external_link: "",
   instructions: "",
@@ -140,7 +140,7 @@ export default function MissionsManager({ missions }: { missions: Mission[] }) {
       </div>
 
       {missions.length === 0 ? (
-        <div className="bg-paper border border-line rounded-xl p-16 text-center">
+        <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-16 text-center">
           <div className="text-5xl mb-3">🎯</div>
           <p className="text-ink-soft mb-4">No missions yet.</p>
           <button className="btn" onClick={openAdd}>Create your first mission</button>
@@ -181,7 +181,7 @@ function MissionCard({
   const gradient = `linear-gradient(135deg, ${m.cover_color} 0%, ${darken(m.cover_color, 25)} 100%)`;
   const expiresSoon = m.expires_at && (new Date(m.expires_at).getTime() - Date.now()) < 7 * 24 * 60 * 60 * 1000;
   return (
-    <div className={`rounded-xl overflow-hidden border-[1.5px] border-ink shadow-[4px_4px_0_#1f2238] ${!m.is_active ? "opacity-50" : ""}`}>
+    <div className={`rounded-xl overflow-hidden border-[1.5px] border-ink shadow-[4px_4px_0_#272727] ${!m.is_active ? "opacity-50" : ""}`}>
       <div className="relative h-44 p-5 text-white flex flex-col justify-between" style={{ background: gradient }}>
         <div className="flex justify-between items-start gap-2">
           <div className="flex gap-1.5 flex-wrap">

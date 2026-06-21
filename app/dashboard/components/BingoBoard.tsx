@@ -120,7 +120,7 @@ export default function BingoBoard({
     <div className="space-y-6">
       {/* Header */}
       <div
-        className="rounded-2xl overflow-hidden border-[1.5px] border-ink shadow-[6px_6px_0_#1f2238]"
+        className="rounded-2xl overflow-hidden border-[1.5px] border-ink shadow-[6px_6px_0_#272727]"
         style={{ background: gradient }}
       >
         <div className="p-6 sm:p-8 text-white">

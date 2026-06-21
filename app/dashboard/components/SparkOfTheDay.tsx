@@ -37,7 +37,7 @@ export default function SparkOfTheDay({
 
   if (!todaysSpark) {
     return (
-      <div className="bg-paper border border-line rounded-xl p-12 text-center mb-8">
+      <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-12 text-center mb-8">
         <div className="text-5xl mb-3">🌙</div>
         <p className="font-serif text-xl font-semibold mb-1">No Spark today</p>
         <p className="text-ink-soft text-sm">Today's a rest day — see you tomorrow!</p>
@@ -101,7 +101,7 @@ export default function SparkOfTheDay({
 
       {/* The main card */}
       <div
-        className="relative rounded-2xl overflow-hidden border-[1.5px] border-ink shadow-[6px_6px_0_#1f2238] mb-8"
+        className="relative rounded-2xl overflow-hidden border-[1.5px] border-ink shadow-[6px_6px_0_#272727] mb-8"
         style={{ background: gradient }}
       >
         <div className="p-6 sm:p-8 text-white">
@@ -160,7 +160,7 @@ export default function SparkOfTheDay({
 
       {/* Recent claims preview */}
       {recentClaims.length > 0 && (
-        <div className="bg-paper border border-line rounded-xl p-4 mb-8">
+        <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-4 mb-8">
           <div className="text-[10px] tracking-[0.15em] uppercase text-ink-soft font-bold mb-3">Your recent sparks</div>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {recentClaims.slice(0, 14).map((c) => {

@@ -3,14 +3,14 @@ import type { RedemptionOrder } from "@/lib/types";
 export default function OrdersTable({ orders }: { orders: RedemptionOrder[] }) {
   if (orders.length === 0) {
     return (
-      <div className="bg-paper border border-line rounded-xl p-12 text-center text-ink-faint">
+      <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] p-12 text-center text-ink-faint">
         No orders yet. Browse the catalog to redeem!
       </div>
     );
   }
 
   return (
-    <div className="bg-paper border border-line rounded-xl overflow-hidden">
+    <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden">
       <table className="w-full">
         <thead className="bg-cream border-b-[1.5px] border-ink">
           <tr>
