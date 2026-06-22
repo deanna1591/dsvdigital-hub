@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/data/me";
 import { getStreakTimeline } from "@/lib/data/streak";
 import { StreakTimeline } from "@/components/streak-timeline";
+import MoodQuickCheck from "@/components/mood-quick-check";
 import BalanceHero from "@/app/dashboard/components/BalanceHero";
 import SparkOfTheDay from "@/app/dashboard/components/SparkOfTheDay";
 import type { DailySpark, DailySparkClaim } from "@/lib/types";
@@ -20,8 +21,8 @@ export default async function TodayPage() {
   const today = new Date();
   const dayOfYear = getDayOfYear(today);
 
-  // Fetch today's spark + claim, active orders count, and recent claims for the spark card
-  const [sparkRes, sparkClaimRes, ordersRes, recentSparkClaimsRes, totalApprovedRes] = await Promise.all([
+  // Fetch today's spark + claim, active orders count, recent claims, mood today
+  const [sparkRes, sparkClaimRes, ordersRes, recentSparkClaimsRes, totalApprovedRes, moodTodayRes] = await Promise.all([
     supabase
       .from("daily_sparks")
       .select("*")
@@ -51,6 +52,11 @@ export default async function TodayPage() {
       .select("id", { count: "exact" })
       .eq("employee_id", userId)
       .eq("status", "approved"),
+    supabase
+      .from("mood_checkins")
+      .select("id", { count: "exact" })
+      .eq("employee_id", userId)
+      .gte("created_at", today.toISOString().slice(0, 10) + "T00:00:00Z"),
   ]);
 
   const todaysSpark = (sparkRes.data ?? null) as DailySpark | null;
@@ -58,6 +64,7 @@ export default async function TodayPage() {
   const activeOrders = ordersRes.count ?? 0;
   const recentSparkClaims = (recentSparkClaimsRes.data ?? []) as DailySparkClaim[];
   const totalSparksApproved = totalApprovedRes.count ?? 0;
+  const alreadyMoodToday = (moodTodayRes.count ?? 0) > 0;
   // Simple "streak" = consecutive days back from today with an approved claim
   const sparkStreak = computeStreak(recentSparkClaims);
 
@@ -67,6 +74,8 @@ export default async function TodayPage() {
   return (
     <>
       <BalanceHero me={me} activeOrders={activeOrders} />
+
+      <MoodQuickCheck alreadyCheckedIn={alreadyMoodToday} />
 
       <section className="mb-10">
         <SparkOfTheDay
