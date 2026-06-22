@@ -85,7 +85,7 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
     created_at: string;
     points: number;
     note: string | null;
-    category_key?: string | null;
+    category_id?: string | null;
   }>;
   const moods = (moodsRes.data || []) as Array<{
     created_at: string;
@@ -136,7 +136,7 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
   for (const p of points) {
     push(p.created_at, {
       icon: "💰",
-      title: p.category_key ?? "Points awarded",
+      title: p.category_id ?? "Points awarded",
       subtitle: p.note ?? undefined,
       points: p.points,
       status: "approved",

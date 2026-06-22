@@ -68,7 +68,7 @@ async function getSheetDoc(): Promise<GoogleSpreadsheet> {
  */
 export async function writeActivityToSheet(activity: {
   employee_name: string;
-  category_key: string;
+  category_id: string;
   points: number;
   note?: string;
   approved_by_name: string;
@@ -86,7 +86,7 @@ export async function writeActivityToSheet(activity: {
   await sheet.addRow({
     Date: activity.created_at.slice(0, 10),
     Name: activity.employee_name,
-    Category: activity.category_key,
+    Category: activity.category_id,
     Points: activity.points,
     Note: activity.note ?? '',
     'Approved By': activity.approved_by_name,
@@ -196,7 +196,7 @@ export async function nightlySync(): Promise<{ pulled: number; skipped: number; 
       .from('point_activities')
       .insert({
         employee_id: profile.id,
-        category_key: category,
+        category_id: category,
         points,
         note: note || null,
         status: 'approved',
