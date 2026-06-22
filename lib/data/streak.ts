@@ -29,6 +29,7 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
     missionsRes,
     pointsRes,
     moodsRes,
+    spinsRes,
     todaysSparkRes,
   ] = await Promise.all([
     supabase
@@ -55,6 +56,11 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
     supabase
       .from("mood_checkins")
       .select("*")
+      .eq("employee_id", userId)
+      .gte("created_at", startISO + "T00:00:00Z"),
+    supabase
+      .from("spin_wheel_spins")
+      .select("id, activity_day, activity_title, created_at")
       .eq("employee_id", userId)
       .gte("created_at", startISO + "T00:00:00Z"),
     // Today's spark to show as CTA if not yet claimed
@@ -91,6 +97,12 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
     created_at: string;
     mood: string;
     submood?: string | null;
+  }>;
+  const spins = (spinsRes.data || []) as Array<{
+    id: string;
+    activity_day: number;
+    activity_title: string;
+    created_at: string;
   }>;
   const todaysSpark = todaysSparkRes.data as { title: string; emoji: string; points: number } | null;
 
@@ -152,6 +164,15 @@ export async function getStreakTimeline(userId: string, nDays = 7): Promise<DayE
       time: formatTime(m.created_at),
     });
   }
+  for (const s of spins) {
+    push(s.created_at, {
+      icon: "🪩",
+      title: titleCase(s.activity_title),
+      subtitle: `Spin · Day ${s.activity_day} of 200`,
+      noPoints: true,
+      time: formatTime(s.created_at),
+    });
+  }
 
   // Build the day entries from most recent to oldest
   const days: DayEntry[] = [];
@@ -211,4 +232,12 @@ function getDayOfYear(d: Date): number {
   const start = new Date(d.getFullYear(), 0, 0);
   const diff = d.getTime() - start.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function titleCase(s: string): string {
+  return s
+    .toLowerCase()
+    .split(" ")
+    .map((w) => (w.length === 0 ? w : w[0].toUpperCase() + w.slice(1)))
+    .join(" ");
 }
