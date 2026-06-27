@@ -302,74 +302,78 @@ export default function Photobooth() {
           {!hasStrip && (
             <>
               {mode === "webcam" && (
-                <div className="relative bg-graphite border-[1.5px] border-graphite rounded-y2k overflow-hidden shadow-[3px_3px_0_#272727]">
-                  <video
-                    ref={videoRef}
-                    className="block w-full aspect-video object-cover"
-                    style={{ transform: "scaleX(-1)" }}
-                    playsInline
-                    muted
-                  />
-                  {flash && (
-                    <div className="absolute inset-0 bg-paper animate-pulse pointer-events-none" />
-                  )}
-                  {countdown !== null && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="font-serif text-[140px] sm:text-[180px] font-bold text-paper drop-shadow-[3px_3px_0_#272727]">
-                        {countdown}
+                <FramePreview frame={frame}>
+                  <div className="relative bg-graphite overflow-hidden">
+                    <video
+                      ref={videoRef}
+                      className="block w-full aspect-video object-cover"
+                      style={{ transform: "scaleX(-1)" }}
+                      playsInline
+                      muted
+                    />
+                    {flash && (
+                      <div className="absolute inset-0 bg-paper animate-pulse pointer-events-none" />
+                    )}
+                    {countdown !== null && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="font-serif text-[140px] sm:text-[180px] font-bold text-paper drop-shadow-[3px_3px_0_#272727]">
+                          {countdown}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {!webcamReady && !webcamError && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <p className="text-paper text-sm font-medium">Connecting camera…</p>
-                    </div>
-                  )}
-                  {webcamError && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 bg-graphite/90">
-                      <p className="text-paper text-sm mb-2">🚫 {webcamError}</p>
-                      <button
-                        onClick={() => setMode("upload")}
-                        className="px-3 py-1 text-xs font-bold rounded-full bg-lavender text-graphite border-[1.5px] border-paper"
-                      >
-                        Switch to upload mode
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                    {!webcamReady && !webcamError && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <p className="text-paper text-sm font-medium">Connecting camera…</p>
+                      </div>
+                    )}
+                    {webcamError && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 bg-graphite/90">
+                        <p className="text-paper text-sm mb-2">🚫 {webcamError}</p>
+                        <button
+                          onClick={() => setMode("upload")}
+                          className="px-3 py-1 text-xs font-bold rounded-full bg-lavender text-graphite border-[1.5px] border-paper"
+                        >
+                          Switch to upload mode
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </FramePreview>
               )}
 
               {mode === "upload" && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[0, 1, 2, 3].map((i) => (
-                    <label
-                      key={i}
-                      className="border-[1.5px] border-graphite rounded-y2k aspect-[3/4] flex items-center justify-center text-sm bg-cream cursor-pointer hover:bg-lavender/30 transition-colors relative overflow-hidden"
-                    >
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleUploadFile(i, e.target.files?.[0] ?? null)}
-                      />
-                      {photos[i] ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={URL.createObjectURL(photos[i])}
-                            alt={`Photo ${i + 1}`}
-                            className="absolute inset-0 w-full h-full object-cover"
-                          />
-                          <div className="absolute top-1 left-1 bg-graphite text-paper text-[10px] font-bold px-1.5 rounded-full border border-paper">
-                            {i + 1}
-                          </div>
-                        </>
-                      ) : (
-                        <span className="font-bold text-graphite text-2xl">{i + 1}</span>
-                      )}
-                    </label>
-                  ))}
-                </div>
+                <FramePreview frame={frame}>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 bg-graphite">
+                    {[0, 1, 2, 3].map((i) => (
+                      <label
+                        key={i}
+                        className="border-[1.5px] border-paper rounded-lg aspect-[3/4] flex items-center justify-center text-sm bg-cream cursor-pointer hover:bg-lavender/30 transition-colors relative overflow-hidden"
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleUploadFile(i, e.target.files?.[0] ?? null)}
+                        />
+                        {photos[i] ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={URL.createObjectURL(photos[i])}
+                              alt={`Photo ${i + 1}`}
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                            <div className="absolute top-1 left-1 bg-graphite text-paper text-[10px] font-bold px-1.5 rounded-full border border-paper">
+                              {i + 1}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="font-bold text-graphite text-2xl">{i + 1}</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </FramePreview>
               )}
 
               {/* Shot indicators */}
@@ -425,6 +429,89 @@ export default function Photobooth() {
           {error}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── FramePreview ─────────────────────────────────────────────
+/**
+ * Wraps content in a live preview of the selected frame. Mimics
+ * how the strip will look — colored border, corner decorations,
+ * caption band with today's date — but renders pure CSS so it
+ * stays cheap to recompose on frame change.
+ */
+function FramePreview({
+  frame,
+  children,
+}: {
+  frame: ReturnType<typeof getFrame>;
+  children: React.ReactNode;
+}) {
+  const decoSymbols = {
+    stars: ["★", "✦"],
+    hearts: ["♡", "♥"],
+    tape: ["▰", "▱"],
+    sparkles: ["✧", "✦"],
+  };
+  const deco = frame.decorations.find((d) => d && d in decoSymbols) as keyof typeof decoSymbols | undefined;
+  const symbols = deco ? decoSymbols[deco] : null;
+  const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  return (
+    <div
+      className="border-[3px] border-graphite rounded-y2k shadow-[3px_3px_0_#272727] overflow-hidden"
+      style={{ background: frame.bg }}
+    >
+      {/* Top decorative row */}
+      <div className="relative h-7 flex items-center justify-between px-3" style={{ color: frame.caption }}>
+        {symbols && (
+          <>
+            <span className="text-lg leading-none">{symbols[0]}</span>
+            <span className="text-lg leading-none">{symbols[1]}</span>
+          </>
+        )}
+      </div>
+
+      {/* Frame padding around content */}
+      <div className="px-3" style={{ background: frame.bg }}>
+        {/* Content (camera or upload grid) sits inside a black border like a strip photo */}
+        <div
+          className="border-2 overflow-hidden"
+          style={{ borderColor: frame.border }}
+        >
+          {children}
+        </div>
+      </div>
+
+      {/* Caption band */}
+      <div
+        className="mx-3 mt-2 mb-2 py-2 text-center text-[11px] tracking-[0.18em] font-bold uppercase border-2"
+        style={{
+          background: frame.spacer,
+          color: frame.caption,
+          borderColor: frame.border,
+        }}
+      >
+        {today.toUpperCase()}
+      </div>
+
+      {/* Bottom decorative row + DSV mark */}
+      <div
+        className="px-3 pb-2 flex items-center justify-between"
+        style={{ color: frame.caption }}
+      >
+        {symbols ? (
+          <span className="text-lg leading-none">{symbols[1]}</span>
+        ) : (
+          <span />
+        )}
+        <span className="text-[9px] tracking-[0.2em] font-bold">DSV PHOTOBOOTH</span>
+        {symbols ? (
+          <span className="text-lg leading-none">{symbols[0]}</span>
+        ) : (
+          <span />
+        )}
+      </div>
     </div>
   );
 }
