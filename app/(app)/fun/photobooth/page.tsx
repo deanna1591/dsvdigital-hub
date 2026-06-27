@@ -1,17 +1,32 @@
-import ComingSoon from "@/components/coming-soon";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/data/me";
+import Photobooth from "./Photobooth";
+import PhotoboothGallery from "./PhotoboothGallery";
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function PhotoboothPage() {
+  const { userId } = await getCurrentUser();
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("photobooth_strips")
+    .select("id, image_url, share_to_feed, created_at")
+    .eq("employee_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(40);
+
+  const strips = (data ?? []) as Array<{
+    id: string;
+    image_url: string;
+    share_to_feed: boolean;
+    created_at: string;
+  }>;
+
   return (
-    <ComingSoon
-      emoji="📸"
-      title="Photobooth"
-      description="4-shot strip generator with cute Y2K frames. Just for fun, no points."
-      teasers={[
-        "Take 4 selfies in a row, like the mall photobooth",
-        "Pick a frame and theme — cassette, sticker, vapor",
-        "Download as PNG or share to the team feed",
-        "Strips persist in your private gallery",
-      ]}
-    />
+    <div className="max-w-3xl mx-auto">
+      <Photobooth />
+      <PhotoboothGallery strips={strips} />
+    </div>
   );
 }
