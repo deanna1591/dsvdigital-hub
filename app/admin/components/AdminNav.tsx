@@ -8,6 +8,7 @@ export default function AdminNav() {
   const tabs = [
     { href: "/admin", label: "Operations", icon: "🛠️" },
     { href: "/admin/sparks", label: "Sparks", icon: "✨" },
+    { href: "/admin/bingo", label: "Bingo", icon: "🎲" },
     { href: "/admin/missions", label: "Missions", icon: "⚡" },
     { href: "/admin/catalog", label: "Catalog", icon: "💸" },
   ];

@@ -256,3 +256,44 @@ export type FeedEvent = {
   spark_emoji?: string;
   spark_color?: string;
 };
+
+// =====================================================
+// Unified Bingo (post-migration 013)
+// =====================================================
+export type BingoBoardStatus = "draft" | "live" | "archived";
+
+export interface BingoBoardRow {
+  id: string;
+  title: string;
+  month: string;
+  start_date: string;
+  end_date: string;
+  status: BingoBoardStatus;
+  theme: string;
+  created_at: string;
+}
+
+export interface BingoBoardSquareRow {
+  id: string;
+  board_id: string;
+  col: number;
+  row: number;
+  name: string;
+  emoji: string;
+  prompt: string;
+  is_free: boolean;
+  is_lucky: boolean;
+}
+
+export interface BingoBoardClaimRow {
+  id: string;
+  square_id: string;
+  employee_id: string;
+  photo_url: string | null;
+  proof_text: string | null;
+  share_to_feed: boolean;
+  status: "pending" | "approved" | "rejected";
+  reviewed_by: string | null;
+  rejection_note: string | null;
+  created_at: string;
+}
