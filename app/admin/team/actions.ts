@@ -34,6 +34,16 @@ export async function inviteEmployee(formData: FormData): Promise<
   { ok: true; userId: string } | { error: string }
 > {
   await requireAdmin();
+
+  // Guard against missing service-role key — that's the most common
+  // source of an empty {} error.
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return {
+      error:
+        "Server is missing SUPABASE_SERVICE_ROLE_KEY. Add it to your .env.local and restart the dev server.",
+    };
+  }
+
   const admin = createAdminClient();
 
   const email = String(formData.get("email") || "").trim().toLowerCase();
@@ -61,11 +71,34 @@ export async function inviteEmployee(formData: FormData): Promise<
   }
 
   // Send invite (creates the auth.users row + triggers profile creation)
-  const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { name },
-  });
+  let inviteData: Awaited<ReturnType<typeof admin.auth.admin.inviteUserByEmail>>["data"] | null = null;
+  let inviteErr: unknown = null;
+  try {
+    const res = await admin.auth.admin.inviteUserByEmail(email, {
+      data: { name },
+    });
+    inviteData = res.data;
+    inviteErr = res.error;
+  } catch (e) {
+    inviteErr = e;
+  }
+
   if (inviteErr || !inviteData?.user) {
-    return { error: `Invite failed: ${inviteErr?.message ?? "no user returned"}` };
+    // Log the full error to the server console for inspection — the
+    // client only sees the stringified summary.
+    // eslint-disable-next-line no-console
+    console.error("[invite] failed:", inviteErr);
+
+    // Pull the most useful message out of whatever shape the error is.
+    const e = inviteErr as { message?: string; code?: string; status?: number; error_description?: string } | null;
+    const summary =
+      e?.message ||
+      e?.error_description ||
+      (e?.code ? `code=${e.code}` : null) ||
+      (e?.status ? `HTTP ${e.status}` : null) ||
+      (typeof e === "object" ? JSON.stringify(e) : String(e)) ||
+      "no user returned";
+    return { error: `Invite failed: ${summary}. Check the dev server terminal for full details.` };
   }
   const userId = inviteData.user.id;
 
