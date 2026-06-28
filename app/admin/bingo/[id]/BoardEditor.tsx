@@ -3,7 +3,31 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { BingoBoardRow, BingoBoardSquareRow } from "@/lib/types";
-import { updateBoardMeta, updateSquare } from "../actions";
+import { updateBoardMeta, updateSquare, publishBoard } from "../actions";
+
+// Mirror server-side validation so we show readiness inline.
+function findIssues(squares: BingoBoardSquareRow[]): string[] {
+  const issues: string[] = [];
+  if (squares.length !== 25) {
+    issues.push(`Board has ${squares.length} squares (needs exactly 25)`);
+    return issues;
+  }
+  for (const s of squares) {
+    const label = `(${s.col + 1},${s.row + 1})`;
+    if (!s.name || s.name.trim() === "" || s.name === "New square") {
+      issues.push(`${label} needs a name`);
+      continue;
+    }
+    if (s.is_free) continue; // FREE squares are auto-marked, prompts/points optional
+    if (!s.prompt || s.prompt.trim() === "" || s.prompt === "Describe what to do") {
+      issues.push(`"${s.name}" needs a prompt`);
+    }
+    if (s.points == null || s.points < 1) {
+      issues.push(`"${s.name}" needs at least 1 point`);
+    }
+  }
+  return issues;
+}
 
 export default function BoardEditor({
   board,
@@ -129,6 +153,11 @@ export default function BoardEditor({
 
       {/* 5x5 grid editor */}
       <div className="bg-paper border-[1.5px] border-graphite rounded-y2k p-4 shadow-[3px_3px_0_#272727]">
+        {/* Readiness banner — only shown for draft boards */}
+        {board.status === "draft" && (
+          <ReadinessBanner squares={squares} boardId={board.id} />
+        )}
+
         <p className="text-xs text-ink-soft mb-3">Click any square to edit its name, emoji, and prompt. Mark a square as FREE or as the LUCKY square.</p>
         <div className="grid grid-cols-5 gap-2 max-w-2xl mx-auto">
           {grid.flatMap((row, r) =>
@@ -290,6 +319,97 @@ export default function BoardEditor({
             </form>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ReadinessBanner ─────────────────────────────────────────
+/**
+ * Sticky banner above the grid for draft boards. Shows the user
+ * what (if anything) needs to be filled in before they can publish.
+ * When the board is fully filled out, the publish button appears.
+ */
+function ReadinessBanner({
+  squares,
+  boardId,
+}: {
+  squares: BingoBoardSquareRow[];
+  boardId: string;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [expanded, setExpanded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const issues = findIssues(squares);
+  const ready = issues.length === 0;
+
+  function handlePublish() {
+    if (!ready) return;
+    if (!confirm("Publish this board? Any currently-live board will be archived.")) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await publishBoard(boardId);
+      if (res?.error) setError(res.error);
+      else {
+        router.push("/admin/bingo");
+        router.refresh();
+      }
+    });
+  }
+
+  if (ready) {
+    return (
+      <div className="mb-4 p-3 bg-good/10 border-[1.5px] border-good rounded-y2k flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xl">✓</span>
+          <div>
+            <strong className="text-sm">Board is ready</strong>
+            <p className="text-xs text-ink-soft">All 25 squares filled in. You can publish.</p>
+          </div>
+        </div>
+        <button
+          onClick={handlePublish}
+          disabled={pending}
+          className="btn text-xs px-4 py-1.5 bg-good text-paper border-graphite"
+        >
+          {pending ? "Publishing…" : "▶ Publish board"}
+        </button>
+        {error && (
+          <div className="w-full mt-2 p-2 text-xs bg-error/10 border border-error text-error rounded">
+            {error}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 p-3 bg-bubblegum/30 border-[1.5px] border-graphite rounded-y2k">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xl">⚠️</span>
+        <div className="flex-1">
+          <strong className="text-sm">Not ready to publish yet</strong>
+          <p className="text-xs text-ink-soft">
+            {issues.length} thing{issues.length === 1 ? "" : "s"} need attention before this board can go live.
+          </p>
+        </div>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs font-bold underline-offset-2 hover:underline"
+        >
+          {expanded ? "Hide" : "Show"} list
+        </button>
+      </div>
+      {expanded && (
+        <ul className="mt-2 ml-7 space-y-1 max-h-40 overflow-y-auto">
+          {issues.map((issue, i) => (
+            <li key={i} className="text-xs text-ink-soft">
+              • {issue}
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

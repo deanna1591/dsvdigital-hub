@@ -173,7 +173,46 @@ export async function updateSquare(formData: FormData) {
 export async function publishBoard(boardId: string) {
   const supabase = await requireAdmin();
 
-  // Demote any other live boards in the same time window
+  // ============ Validate the board is ready to publish ============
+  const { data: squares, error: sqErr } = await supabase
+    .from("bingo_board_squares")
+    .select("col, row, name, prompt, points, is_free")
+    .eq("board_id", boardId);
+
+  if (sqErr) return { error: `Couldn't load squares: ${sqErr.message}` };
+
+  if (!squares || squares.length !== 25) {
+    return { error: `Board needs exactly 25 squares (found ${squares?.length ?? 0})` };
+  }
+
+  // Detect un-edited / blank squares
+  const issues: string[] = [];
+  for (const s of squares) {
+    const label = `(${s.col + 1},${s.row + 1})`;
+    if (!s.name || s.name.trim() === "" || s.name === "New square") {
+      issues.push(`${label} has no name`);
+      continue;
+    }
+    // FREE squares can have empty prompts and 0 points — that's expected.
+    if (s.is_free) continue;
+    if (!s.prompt || s.prompt.trim() === "" || s.prompt === "Describe what to do") {
+      issues.push(`"${s.name}" ${label} has no prompt`);
+    }
+    if (s.points == null || s.points < 1) {
+      issues.push(`"${s.name}" ${label} needs at least 1 point`);
+    }
+  }
+
+  if (issues.length > 0) {
+    const preview = issues.slice(0, 5).join("; ");
+    const more = issues.length > 5 ? ` (+${issues.length - 5} more)` : "";
+    return {
+      error: `Not ready to publish — fill in every square first. Issues: ${preview}${more}`,
+    };
+  }
+
+  // ============ Publish ============
+  // Demote any other live boards in the same month
   await supabase
     .from("bingo_boards")
     .update({ status: "past" })
