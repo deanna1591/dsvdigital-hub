@@ -23,12 +23,13 @@ async function LoginForm({
 
       <div className="w-full max-w-md relative">
         {/* Logo */}
-        <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-12 h-12 bg-graphite text-paper flex items-center justify-center font-serif font-bold italic text-2xl rounded-lg border-[1.5px] border-graphite shadow-[3px_3px_0_#E8B044]">
-            D
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <div className="w-24 h-24 bg-paper rounded-2xl border-[1.5px] border-graphite shadow-[4px_4px_0_#E8B044] flex items-center justify-center p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-icon.png" alt="DSV Digital" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <h1 className="font-serif text-2xl font-semibold tracking-tight">DSV Portal</h1>
+          <div className="text-center">
+            <h1 className="font-serif text-2xl font-semibold tracking-tight">DSV Digital Hub</h1>
             <p className="text-[10px] tracking-[0.18em] uppercase text-ink-soft font-bold">
               Points · Engagement
             </p>

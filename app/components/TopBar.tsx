@@ -17,11 +17,12 @@ export default function TopBar({
     <header className="bg-paper border-b-[1.5px] border-graphite px-4 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-50 shadow-[0_2px_0_rgba(39,39,39,0.04)]">
       <div className="max-w-[1280px] mx-auto flex items-center justify-between flex-wrap gap-3">
         <Link href="/today" className="flex items-center gap-2.5 sm:gap-3 group">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-graphite text-paper flex items-center justify-center font-serif font-bold italic text-xl rounded-lg border-[1.5px] border-graphite shadow-[2px_2px_0_#E8B044] group-hover:shadow-[3px_3px_0_#E8B044] group-hover:-translate-x-px group-hover:-translate-y-px transition-all">
-            D
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-paper flex items-center justify-center rounded-lg border-[1.5px] border-graphite shadow-[2px_2px_0_#E8B044] group-hover:shadow-[3px_3px_0_#E8B044] group-hover:-translate-x-px group-hover:-translate-y-px transition-all overflow-hidden p-0.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-icon.png" alt="DSV Digital" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="font-serif text-lg sm:text-xl font-semibold leading-tight tracking-tight">DSV Portal</h1>
+            <h1 className="font-serif text-lg sm:text-xl font-semibold leading-tight tracking-tight">DSV Digital Hub</h1>
             <p className="text-[10px] tracking-[0.18em] uppercase text-ink-soft font-bold hidden sm:block">
               Points · Engagement
             </p>
