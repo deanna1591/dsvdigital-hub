@@ -7,6 +7,7 @@ export default function AdminNav() {
   const pathname = usePathname();
   const tabs = [
     { href: "/admin", label: "Operations", icon: "🛠️" },
+    { href: "/admin/team", label: "Team", icon: "👥" },
     { href: "/admin/sparks", label: "Sparks", icon: "✨" },
     { href: "/admin/bingo", label: "Bingo", icon: "🎲" },
     { href: "/admin/missions", label: "Missions", icon: "⚡" },

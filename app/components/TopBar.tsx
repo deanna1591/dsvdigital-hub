@@ -51,12 +51,16 @@ export default function TopBar({
 
         <div className="flex items-center gap-2 sm:gap-3">
           <NotificationBell userId={userId} isAdmin={isAdmin} />
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-cream border-[1.5px] border-graphite rounded-full text-sm">
+          <Link
+            href="/profile"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-cream border-[1.5px] border-graphite rounded-full text-sm hover:bg-lavender/30 transition-colors"
+            aria-label="View profile"
+          >
             <div className="w-7 h-7 bg-lavender text-graphite rounded-full flex items-center justify-center font-bold text-xs border-[1.5px] border-graphite">
               {me.name.charAt(0).toUpperCase()}
             </div>
             <span className="font-semibold text-graphite">{me.name.split(" ")[0]}</span>
-          </div>
+          </Link>
           <form action={logout}>
             <button className="text-xs text-ink-soft hover:text-graphite font-semibold underline-offset-2 hover:underline transition-colors" type="submit">
               Sign out
