@@ -260,7 +260,7 @@ export type FeedEvent = {
 // =====================================================
 // Unified Bingo (post-migration 013)
 // =====================================================
-export type BingoBoardStatus = "draft" | "live" | "archived";
+export type BingoBoardStatus = "draft" | "live" | "past";
 
 export interface BingoBoardRow {
   id: string;

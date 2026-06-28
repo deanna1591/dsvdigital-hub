@@ -9,7 +9,7 @@ import { createBoard, publishBoard, archiveBoard, unpublishBoard, deleteBoard } 
 const STATUS_PILL: Record<string, string> = {
   live: "bg-good text-paper",
   draft: "bg-cream text-graphite",
-  archived: "bg-line text-ink-soft",
+  past: "bg-line text-ink-soft",
 };
 
 export default function BoardsList({ boards }: { boards: BingoBoardRow[] }) {
@@ -76,7 +76,7 @@ export default function BoardsList({ boards }: { boards: BingoBoardRow[] }) {
 
   const liveBoard = boards.find((b) => b.status === "live");
   const draftBoards = boards.filter((b) => b.status === "draft");
-  const archivedBoards = boards.filter((b) => b.status === "archived");
+  const archivedBoards = boards.filter((b) => b.status === "past");
 
   return (
     <div>

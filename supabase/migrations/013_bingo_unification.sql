@@ -20,7 +20,7 @@ select
   to_char(e.start_date, 'YYYY-MM') as month,
   e.start_date,
   e.end_date,
-  case when e.is_active then 'live' else 'archived' end as status,
+  case when e.is_active then 'live' else 'past' end as status,
   coalesce(e.cover_emoji, '🎲') as theme,
   e.created_at
 from public.bingo_events e

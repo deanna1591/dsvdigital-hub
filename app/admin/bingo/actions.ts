@@ -172,7 +172,7 @@ export async function publishBoard(boardId: string) {
   // Demote any other live boards in the same time window
   await supabase
     .from("bingo_boards")
-    .update({ status: "archived" })
+    .update({ status: "past" })
     .eq("status", "live")
     .neq("id", boardId);
 
@@ -191,7 +191,7 @@ export async function archiveBoard(boardId: string) {
   const supabase = await requireAdmin();
   const { error } = await supabase
     .from("bingo_boards")
-    .update({ status: "archived" })
+    .update({ status: "past" })
     .eq("id", boardId);
   if (error) return { error: error.message };
   revalidatePath("/admin/bingo");
