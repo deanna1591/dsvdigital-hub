@@ -204,8 +204,17 @@ export default function TeamList({ employees }: { employees: Employee[] }) {
                         {STATUS_LABELS[emp.employment_status] ?? emp.employment_status}
                       </span>
                     )}
+                    {emp.email?.endsWith("@placeholder.invalid") && (
+                      <span className="text-[10px] tracking-[0.1em] uppercase font-bold px-2 py-0.5 rounded-full bg-bubblegum border-[1.5px] border-graphite">
+                        ✉️ Needs email
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-ink-soft mt-0.5 truncate">{emp.email ?? "no email"}</p>
+                  <p className="text-xs text-ink-soft mt-0.5 truncate">
+                    {emp.email?.endsWith("@placeholder.invalid")
+                      ? <span className="italic text-ink-faint">No email yet — click Edit to add one</span>
+                      : (emp.email ?? "no email")}
+                  </p>
                   {emp.company_client && (
                     <p className="text-xs text-ink-soft mt-0.5 truncate">📍 {emp.company_client}</p>
                   )}
@@ -225,7 +234,7 @@ export default function TeamList({ employees }: { employees: Employee[] }) {
                 >
                   ✏️ Edit
                 </button>
-                {emp.is_active && emp.email && (
+                {emp.is_active && emp.email && !emp.email.endsWith("@placeholder.invalid") && (
                   <button
                     onClick={() => handleResend(emp)}
                     disabled={pending}
@@ -377,19 +386,32 @@ function EmployeeForm({
 
           {/* Email */}
           <div>
-            <label className="label" htmlFor="emp-email">Email {mode === "invite" ? "*" : ""}</label>
+            <label className="label" htmlFor="emp-email">
+              Email {mode === "invite" ? "*" : ""}
+              {employee?.email?.endsWith("@placeholder.invalid") && (
+                <span className="ml-2 text-[10px] tracking-wider uppercase font-bold px-2 py-0.5 rounded-full bg-bubblegum border border-graphite">
+                  Placeholder
+                </span>
+              )}
+            </label>
             <input
               id="emp-email"
               name="email"
               type="email"
-              defaultValue={employee?.email ?? ""}
+              defaultValue={
+                employee?.email?.endsWith("@placeholder.invalid") ? "" : employee?.email ?? ""
+              }
               className="input"
               required={mode === "invite"}
-              disabled={mode === "edit"}
+              placeholder={
+                employee?.email?.endsWith("@placeholder.invalid")
+                  ? "Replace placeholder with the real email"
+                  : "name@dsvdigital.com"
+              }
             />
-            {mode === "edit" && (
-              <p className="text-[10px] text-ink-faint mt-1 italic">
-                Email is the login identity — not editable here. Deactivate and re-invite if it needs to change.
+            {employee?.email?.endsWith("@placeholder.invalid") && (
+              <p className="text-[10px] text-ink-soft mt-1 italic">
+                This account has a placeholder email and can't receive invites yet. Set a real email to enable invites.
               </p>
             )}
           </div>

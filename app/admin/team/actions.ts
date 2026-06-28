@@ -147,6 +147,8 @@ export async function inviteEmployee(formData: FormData): Promise<
 
 /**
  * Update an existing employee's profile (admin can change any field).
+ * When the email changes, also updates auth.users.email via the
+ * admin API so invites/login work with the new address.
  */
 export async function updateEmployee(formData: FormData): Promise<
   { ok: true } | { error: string }
@@ -174,6 +176,27 @@ export async function updateEmployee(formData: FormData): Promise<
     return { error: "Invalid email" };
   }
   if (statusRaw && !status) return { error: "Invalid status" };
+
+  // Fetch the current profile so we can detect if email changed
+  const { data: current } = await admin
+    .from("profiles")
+    .select("email")
+    .eq("id", id)
+    .single();
+
+  const emailChanged = email && email !== current?.email;
+
+  // If email changed, update auth.users too (the actual login identity)
+  if (emailChanged && email) {
+    const { error: authErr } = await admin.auth.admin.updateUserById(id, {
+      email,
+      email_confirm: true,
+    });
+    if (authErr) {
+      const msg = (authErr as { message?: string }).message ?? JSON.stringify(authErr);
+      return { error: `Auth email update failed: ${msg}` };
+    }
+  }
 
   // Handle photo upload if provided
   let photoUrl: string | undefined; // undefined = don't change

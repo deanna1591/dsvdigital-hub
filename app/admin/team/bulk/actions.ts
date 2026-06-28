@@ -40,6 +40,11 @@ async function requireAdmin() {
  *     created in "confirmed but no password" state; she can send
  *     invites later via the per-row 'Resend invite' button)
  *
+ * Names-only mode: if mode=names, treats each non-empty line as
+ * a person's name and generates a placeholder email like
+ * 'cheruby.bermudez@placeholder.invalid'. Admin fills in the
+ * real email + other details later via the per-row Edit modal.
+ *
  * Returns a per-row result list so the UI can show what happened.
  */
 export async function bulkInviteEmployees(formData: FormData): Promise<{
@@ -68,10 +73,42 @@ export async function bulkInviteEmployees(formData: FormData): Promise<{
   }
 
   const admin = createAdminClient();
+  const mode = String(formData.get("mode") || "csv");
   const csv = String(formData.get("csv") || "").trim();
   const sendInvite = formData.get("send_invite") === "on";
 
-  const lines = csv.split(/\r?\n/).filter((l) => l.trim());
+  // Build a normalized CSV string regardless of mode so the
+  // downstream parser stays the same.
+  let processed = csv;
+  const usedPlaceholders = new Set<string>();
+  const placeholderRows: string[] = [];
+
+  if (mode === "names") {
+    const names = csv
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (names.length === 0) {
+      return {
+        results: [
+          { row: 0, name: "", email: "", status: "error", message: "Paste at least one name" },
+        ],
+        ok: 0,
+        skipped: 0,
+        failed: 1,
+      };
+    }
+    placeholderRows.push("name,email,company,status,phone,member_since");
+    for (const name of names) {
+      const placeholder = nameToPlaceholderEmail(name, usedPlaceholders);
+      // Escape commas in names
+      const safeName = name.includes(",") ? `"${name.replace(/"/g, '""')}"` : name;
+      placeholderRows.push(`${safeName},${placeholder},,,,`);
+    }
+    processed = placeholderRows.join("\n");
+  }
+
+  const lines = processed.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) {
     return {
       results: [
@@ -238,4 +275,32 @@ function parseCsvLine(line: string): string[] {
   }
   out.push(cur);
   return out;
+}
+
+/**
+ * Generate a placeholder email from a person's name.
+ *   "Cheruby Bermudez"          → cheruby.bermudez@placeholder.invalid
+ *   "Diana Caroline F. Dulinski" → diana.caroline.f.dulinski@placeholder.invalid
+ * Collisions get a numeric suffix.
+ *
+ * Uses the RFC 2606 reserved ".invalid" TLD so these can never
+ * accidentally collide with real email addresses.
+ */
+function nameToPlaceholderEmail(name: string, used: Set<string>): string {
+  const base = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip accents
+    .replace(/[^a-z0-9\s]/g, "") // strip punctuation
+    .trim()
+    .split(/\s+/)
+    .join(".");
+  let candidate = `${base || "user"}@placeholder.invalid`;
+  let n = 2;
+  while (used.has(candidate)) {
+    candidate = `${base || "user"}.${n}@placeholder.invalid`;
+    n++;
+  }
+  used.add(candidate);
+  return candidate;
 }
