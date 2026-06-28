@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import type { SummaryRow } from "./page";
 
 type SortKey = "name" | "y2023" | "y2024" | "y2025" | "y2026" | "total" | "total_php";
@@ -18,6 +20,61 @@ export default function SummaryTable({
   const [sortKey, setSortKey] = useState<SortKey>("total");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [hideInactive, setHideInactive] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isLive, setIsLive] = useState(false);
+  const router = useRouter();
+  const refreshTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Realtime subscription: re-fetch the page whenever a new
+  // point_activity is inserted, updated, or deleted. Debounced
+  // so a burst of inserts doesn't trigger 10 refreshes.
+  useEffect(() => {
+    const supabase = createClient();
+
+    const debouncedRefresh = () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      refreshTimer.current = setTimeout(() => {
+        router.refresh();
+        setLastUpdate(new Date());
+      }, 800);
+    };
+
+    const channel = supabase
+      .channel("admin-summary-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "point_activities" },
+        debouncedRefresh,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "historical_year_points" },
+        debouncedRefresh,
+      )
+      .subscribe((status) => {
+        setIsLive(status === "SUBSCRIBED");
+      });
+
+    // Also refresh whenever the tab regains focus (fallback if Realtime
+    // missed a change while the tab was backgrounded)
+    const onFocus = () => {
+      router.refresh();
+      setLastUpdate(new Date());
+    };
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("focus", onFocus);
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    };
+  }, [router]);
+
+  // When the parent server component re-fetches and new rows arrive,
+  // bump the timestamp so the "updated Xs ago" stays current.
+  useEffect(() => {
+    setLastUpdate(new Date());
+  }, [rows]);
 
   const filtered = useMemo(() => {
     let result = [...rows];
@@ -76,6 +133,30 @@ export default function SummaryTable({
 
   return (
     <div>
+      {/* Live indicator */}
+      <div className="mb-3 flex items-center gap-2 text-xs">
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[1.5px] border-graphite font-bold ${
+            isLive ? "bg-good/20 text-good" : "bg-line text-ink-soft"
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-good animate-pulse" : "bg-ink-soft"}`} />
+          {isLive ? "Live" : "Offline"}
+        </span>
+        <span className="text-ink-soft">
+          Last update: <RelativeTime date={lastUpdate} />
+        </span>
+        <button
+          onClick={() => {
+            router.refresh();
+            setLastUpdate(new Date());
+          }}
+          className="ml-auto text-bronze font-bold underline-offset-2 hover:underline"
+        >
+          ↻ Refresh now
+        </button>
+      </div>
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <StatCard label="Total points 2026" value={totals.y2026.toLocaleString()} accent="bg-bubblegum" />
@@ -244,4 +325,28 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
       <div className="font-serif text-2xl font-bold mt-1">{value}</div>
     </div>
   );
+}
+
+function RelativeTime({ date }: { date: Date }) {
+  const [text, setText] = useState(() => formatRelative(date));
+
+  useEffect(() => {
+    const tick = () => setText(formatRelative(date));
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [date]);
+
+  return <span>{text}</span>;
+}
+
+function formatRelative(d: Date): string {
+  const seconds = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const mins = Math.floor(seconds / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return d.toLocaleTimeString();
 }
