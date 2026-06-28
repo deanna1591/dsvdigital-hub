@@ -63,6 +63,9 @@ export interface RedemptionOrder {
   status: OrderStatus;
   admin_note: string | null;
   approved_by: string | null;
+  shipping_name: string | null;
+  shipping_phone: string | null;
+  shipping_address: string | null;
   created_at: string;
   updated_at: string;
   // joined

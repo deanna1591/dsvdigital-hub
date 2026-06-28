@@ -3,10 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-export async function redeemItem(itemId: string): Promise<{ error?: string } | void> {
+export async function redeemItem(
+  itemId: string,
+  shipping: { name: string; phone: string; address: string },
+): Promise<{ error?: string } | void> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not signed in" };
+
+  // Validate shipping fields
+  if (!shipping.name?.trim()) return { error: "Recipient name is required" };
+  if (!shipping.phone?.trim()) return { error: "Phone is required" };
+  if (!shipping.address?.trim()) return { error: "Shipping address is required" };
+  if (shipping.address.trim().length < 10) {
+    return { error: "Shipping address looks too short — include street, city, postal code" };
+  }
 
   // Fetch item + balance atomically-ish (re-check on insert)
   const [itemRes, balRes] = await Promise.all([
@@ -20,7 +31,9 @@ export async function redeemItem(itemId: string): Promise<{ error?: string } | v
   const item = itemRes.data;
   const balance = balRes.data.balance;
 
-  if (balance < item.points) return { error: "Insufficient points" };
+  if (balance < item.points) {
+    return { error: `Insufficient points — you have ${balance}, need ${item.points}` };
+  }
 
   const { error } = await supabase.from("redemption_orders").insert({
     employee_id: user.id,
@@ -29,12 +42,17 @@ export async function redeemItem(itemId: string): Promise<{ error?: string } | v
     item_icon: item.icon,
     points_spent: item.points,
     peso_value: item.peso_value,
+    shipping_name: shipping.name.trim(),
+    shipping_phone: shipping.phone.trim(),
+    shipping_address: shipping.address.trim(),
     status: "pending",
   });
 
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard");
+  revalidatePath("/rewards/catalog");
+  revalidatePath("/rewards/orders");
 }
 
 export async function submitMission({

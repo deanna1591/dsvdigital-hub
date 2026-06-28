@@ -125,7 +125,14 @@ export default function DashboardTabs(props: {
         <BingoBoard event={activeBingo} squares={bingoSquares} myClaims={myBingoClaims} />
       )}
       {tab === "missions" && <MissionsGrid missions={missions} mySubmissions={mySubmissions} />}
-      {tab === "catalog" && <CatalogGrid catalog={catalog} balance={me.balance} />}
+      {tab === "catalog" && (
+        <CatalogGrid
+          catalog={catalog}
+          balance={me.balance}
+          defaultName={me.name}
+          defaultPhone=""
+        />
+      )}
       {tab === "orders" && <OrdersTable orders={orders} />}
       {tab === "activity" && <ActivityTable activity={activity} categories={categories} />}
     </>
