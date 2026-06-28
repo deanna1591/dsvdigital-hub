@@ -29,12 +29,20 @@ export default async function AdminTeamPage() {
 
   return (
     <main className="max-w-[1280px] mx-auto px-4 sm:px-6 py-8">
-      <div className="mb-6">
-        <h1 className="font-serif text-3xl font-semibold">Team</h1>
-        <p className="text-sm text-ink-soft mt-1">
-          Invite new employees and manage existing profiles. Invitees get an
-          email with a magic link to set their password.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-serif text-3xl font-semibold">Team</h1>
+          <p className="text-sm text-ink-soft mt-1">
+            Invite new employees and manage existing profiles. Invitees get an
+            email with a magic link to set their password.
+          </p>
+        </div>
+        <a
+          href="/admin/team/bulk"
+          className="text-xs font-bold text-graphite border-[1.5px] border-graphite rounded-full px-3 py-1.5 bg-paper hover:bg-cream"
+        >
+          📊 Bulk invite (CSV)
+        </a>
       </div>
 
       <TeamList employees={employees} />
