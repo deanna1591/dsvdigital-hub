@@ -60,6 +60,7 @@ export async function createBoard(formData: FormData) {
     prompt: string;
     is_free: boolean;
     is_lucky: boolean;
+    points: number;
   }> = [];
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 5; c++) {
@@ -73,6 +74,7 @@ export async function createBoard(formData: FormData) {
         prompt: isCenter ? "" : "Describe what to do",
         is_free: isCenter,
         is_lucky: false,
+        points: isCenter ? 0 : 5,
       });
     }
   }
@@ -122,6 +124,8 @@ export async function updateSquare(formData: FormData) {
   const prompt = String(formData.get("prompt") || "").trim();
   const isFree = formData.get("is_free") === "on";
   const isLucky = formData.get("is_lucky") === "on";
+  const pointsRaw = Number(formData.get("points") || 5);
+  const points = Number.isFinite(pointsRaw) && pointsRaw >= 0 ? Math.floor(pointsRaw) : 5;
 
   if (!id || !name) return { error: "Square id and name required" };
 
@@ -158,7 +162,7 @@ export async function updateSquare(formData: FormData) {
 
   const { error } = await supabase
     .from("bingo_board_squares")
-    .update({ name, emoji, prompt, is_free: isFree, is_lucky: isLucky })
+    .update({ name, emoji, prompt, is_free: isFree, is_lucky: isLucky, points })
     .eq("id", id);
   if (error) return { error: error.message };
 

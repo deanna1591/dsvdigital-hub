@@ -283,6 +283,7 @@ export interface BingoBoardSquareRow {
   prompt: string;
   is_free: boolean;
   is_lucky: boolean;
+  points: number;
 }
 
 export interface BingoBoardClaimRow {

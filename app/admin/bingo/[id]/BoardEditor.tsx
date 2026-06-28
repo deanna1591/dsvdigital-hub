@@ -225,6 +225,23 @@ export default function BoardEditor({
                   />
                 </div>
 
+                <div>
+                  <label className="label" htmlFor="sq-points">Points earned for this square</label>
+                  <input
+                    id="sq-points"
+                    name="points"
+                    type="number"
+                    className="input"
+                    defaultValue={editingSquare.points ?? 5}
+                    min={0}
+                    max={500}
+                    step={1}
+                  />
+                  <p className="text-[10px] text-ink-soft mt-1 italic">
+                    Lucky squares get an additional +10 bonus on top of this.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <label className="flex items-center gap-2 p-2.5 bg-cream border-[1.5px] border-line rounded-lg cursor-pointer hover:border-graphite transition-colors">
                     <input

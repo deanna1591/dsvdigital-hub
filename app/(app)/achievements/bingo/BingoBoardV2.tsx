@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { BingoBoardRow, BingoBoardSquareRow, BingoBoardClaimRow } from "@/lib/types";
 import { claimBingoSquare } from "./actions";
 
-const POINTS_PER_SQUARE = 5;
 const LUCKY_BONUS = 10;
 const ROW_BONUS = 25;
 const BLACKOUT_BONUS = 100;
 const COVER_COLOR = "#E8B044"; // goldrush
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 function darken(hex: string, percent: number): string {
   const clean = hex.replace("#", "");
@@ -61,9 +61,11 @@ export default function BingoBoardV2({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<BingoBoardSquareRow | null>(null);
-  const [proofUrl, setProofUrl] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [proofText, setProofText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const claimsBySquare = new Map<string, BingoBoardClaimRow>();
   for (const c of myClaims) claimsBySquare.set(c.square_id, c);
@@ -85,32 +87,73 @@ export default function BingoBoardV2({
   const gradient = `linear-gradient(135deg, ${COVER_COLOR} 0%, ${darken(COVER_COLOR, 25)} 100%)`;
   const sortedSquares = [...squares].sort((a, b) => posOf(a) - posOf(b));
 
+  function closeModal() {
+    setSelected(null);
+    setPhotoFile(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
+    setProofText("");
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   function openSquare(sq: BingoBoardSquareRow) {
     const existing = claimsBySquare.get(sq.id);
     if (existing && existing.status !== "rejected") return;
     if (sq.is_free) return;
     setSelected(sq);
-    setProofUrl(existing?.photo_url ?? "");
+    setPhotoFile(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
     setProofText(existing?.proof_text ?? "");
     setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setPhotoFile(null);
+      setPhotoPreview(null);
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setError("Photo is over 5 MB. Pick a smaller one.");
+      e.target.value = "";
+      return;
+    }
+    setError(null);
+    setPhotoFile(file);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  function clearPhoto() {
+    setPhotoFile(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function submit() {
     if (!selected) return;
     setError(null);
-    if (!proofUrl.trim() && !proofText.trim()) {
-      setError("Add a photo URL or a description of what you did");
+
+    if (!photoFile && !proofText.trim()) {
+      setError("Add a photo or describe what you did");
       return;
     }
+
+    const fd = new FormData();
+    fd.set("squareId", selected.id);
+    if (proofText.trim()) fd.set("proofText", proofText.trim());
+    if (photoFile) fd.set("photo", photoFile);
+
     startTransition(async () => {
-      const res = await claimBingoSquare({
-        squareId: selected.id,
-        proofUrl: proofUrl.trim(),
-        proofText: proofText.trim(),
-      });
+      const res = await claimBingoSquare(fd);
       if ("error" in res) setError(res.error);
       else {
-        setSelected(null);
+        closeModal();
         router.refresh();
       }
     });
@@ -216,7 +259,7 @@ export default function BingoBoardV2({
       {selected && (
         <div
           className="fixed inset-0 bg-graphite/60 flex items-center justify-center z-[100] p-5"
-          onClick={() => !pending && setSelected(null)}
+          onClick={() => !pending && closeModal()}
         >
           <div
             className="bg-paper rounded-y2k max-w-lg w-full border-[1.5px] border-graphite overflow-hidden max-h-[90vh] flex flex-col shadow-[4px_4px_0_#272727]"
@@ -244,32 +287,65 @@ export default function BingoBoardV2({
                 <p className="text-sm text-ink-soft leading-relaxed">{selected.prompt}</p>
               )}
 
+              {/* Photo upload */}
               <div>
-                <label className="label" htmlFor="proof-url">Link to your proof (photo, drive link, etc.) — optional</label>
-                <input
-                  id="proof-url"
-                  type="url"
-                  className="input"
-                  value={proofUrl}
-                  onChange={(e) => setProofUrl(e.target.value)}
-                  placeholder="https://drive.google.com/..."
-                />
+                <label className="label">Upload a photo (optional, 5 MB max)</label>
+                {!photoFile ? (
+                  <label className="block border-[1.5px] border-dashed border-graphite rounded-lg p-4 text-center cursor-pointer hover:bg-cream transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/heic"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    <div className="text-2xl mb-1">📷</div>
+                    <div className="text-sm font-semibold text-graphite">Tap to pick a photo</div>
+                    <div className="text-xs text-ink-soft mt-0.5">PNG, JPG, or WebP · up to 5 MB</div>
+                  </label>
+                ) : (
+                  <div className="border-[1.5px] border-graphite rounded-lg p-3 flex items-start gap-3">
+                    {photoPreview && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        className="w-20 h-20 object-cover rounded border border-graphite shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold truncate">{photoFile.name}</div>
+                      <div className="text-[10px] text-ink-soft">
+                        {(photoFile.size / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearPhoto}
+                        className="text-xs text-error font-bold underline-offset-2 hover:underline mt-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
-                <label className="label" htmlFor="proof-text">Or describe what you did — optional</label>
+                <label className="label" htmlFor="proof-text">
+                  Describe what you did (optional)
+                </label>
                 <textarea
                   id="proof-text"
                   className="textarea"
                   value={proofText}
                   onChange={(e) => setProofText(e.target.value)}
-                  placeholder="Describe briefly..."
+                  placeholder="Briefly tell us what happened..."
                   rows={3}
                 />
               </div>
 
               <p className="text-xs text-ink-faint italic">
-                You can provide either a link OR a text description (at least one required).
+                A photo OR a description is required (at least one).
               </p>
 
               {error && (
@@ -282,7 +358,7 @@ export default function BingoBoardV2({
             <div className="px-6 py-4 border-t border-line bg-cream flex justify-end gap-2">
               <button
                 className="btn btn-ghost"
-                onClick={() => setSelected(null)}
+                onClick={closeModal}
                 disabled={pending}
               >
                 Cancel
@@ -290,7 +366,7 @@ export default function BingoBoardV2({
               <button className="btn" onClick={submit} disabled={pending}>
                 {pending
                   ? "Submitting…"
-                  : `Mark Square +${POINTS_PER_SQUARE + (selected.is_lucky ? LUCKY_BONUS : 0)} pts`}
+                  : `Mark Square +${selected.points + (selected.is_lucky ? LUCKY_BONUS : 0)} pts`}
               </button>
             </div>
           </div>
