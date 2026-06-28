@@ -15,8 +15,13 @@ function getDayOfYear(date: Date): number {
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
-export default async function TodayPage() {
+export default async function TodayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string }>;
+}) {
   const { me, userId } = await getCurrentUser();
+  const { notice } = await searchParams;
   const supabase = await createClient();
   const today = new Date();
   const dayOfYear = getDayOfYear(today);
@@ -73,6 +78,14 @@ export default async function TodayPage() {
 
   return (
     <>
+      {notice === "admin_only" && (
+        <div className="mb-4 p-3 bg-bubblegum/40 border-[1.5px] border-graphite rounded-y2k text-sm flex items-center gap-2">
+          <span>🔒</span>
+          <span>
+            <strong>That area is admin-only.</strong> Reach out to your admin if you think you need access.
+          </span>
+        </div>
+      )}
       <BalanceHero me={me} activeOrders={activeOrders} />
 
       <MoodQuickCheck alreadyCheckedIn={alreadyMoodToday} />

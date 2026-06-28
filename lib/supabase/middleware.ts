@@ -43,5 +43,23 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Admin paths require role=admin (defense-in-depth on top of the
+  // layout-level check). Anyone signed in but not an admin who tries
+  // to reach /admin/* is bounced back to /today silently.
+  if (user && path.startsWith("/admin")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/today";
+      url.searchParams.set("notice", "admin_only");
+      return NextResponse.redirect(url);
+    }
+  }
+
   return response;
 }
