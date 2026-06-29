@@ -27,7 +27,17 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAuthPath = path.startsWith("/login") || path.startsWith("/setup");
+  const isAuthPath =
+    path.startsWith("/login") ||
+    path.startsWith("/setup") ||
+    path.startsWith("/auth"); // /auth/callback exchanges the recovery code
+
+  // The auth callback must run even without a session — it's the route
+  // that ESTABLISHES the session by exchanging the PKCE code. Never
+  // redirect away from it.
+  if (path.startsWith("/auth")) {
+    return response;
+  }
 
   // Not signed in and trying to access protected route → login
   if (!user && !isAuthPath && path !== "/") {
@@ -36,8 +46,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Signed in and on /login → today
-  if (user && path.startsWith("/login")) {
+  // Signed in and on /login → today. EXCEPT /login/update-password,
+  // which the user reaches WITH a recovery session specifically to set
+  // a new password. Bouncing them to /today would break the reset flow.
+  if (user && path.startsWith("/login") && !path.startsWith("/login/update-password")) {
     const url = request.nextUrl.clone();
     url.pathname = "/today";
     return NextResponse.redirect(url);
