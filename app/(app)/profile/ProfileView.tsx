@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateMyProfile } from "@/app/admin/team/actions";
+import { updateMyProfile, changeMyPassword } from "@/app/admin/team/actions";
 import type { ProfileDetails } from "./page";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -22,6 +22,22 @@ export default function ProfileView({ profile }: { profile: ProfileDetails }) {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [changingPw, setChangingPw] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+
+  function handleChangePassword(formData: FormData) {
+    setPwError(null);
+    startTransition(async () => {
+      const res = await changeMyPassword(formData);
+      if ("error" in res) {
+        setPwError(res.error);
+      } else {
+        setToast("✓ Password changed");
+        setTimeout(() => setToast(null), 2500);
+        setChangingPw(false);
+      }
+    });
+  }
 
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     setPhotoError(null);
@@ -176,6 +192,78 @@ export default function ProfileView({ profile }: { profile: ProfileDetails }) {
           </div>
         </form>
       )}
+
+      {/* Password & security card */}
+      <div className="bg-paper border-[1.5px] border-graphite rounded-y2k shadow-[4px_4px_0_#A8D8C0] p-6 sm:p-8 mt-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <span className="text-[10px] tracking-[0.2em] uppercase text-ink-soft font-bold">Security</span>
+            <h2 className="font-serif text-xl font-semibold mt-0.5">Password</h2>
+          </div>
+          {!changingPw && (
+            <button onClick={() => { setChangingPw(true); setPwError(null); }} className="btn btn-ghost text-xs">
+              🔑 Change password
+            </button>
+          )}
+        </div>
+
+        {!changingPw ? (
+          <p className="text-sm text-ink-soft mt-3">
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
+            Set your own password anytime — handy if an admin gave you a temporary one to start.
+          </p>
+        ) : (
+          <form action={handleChangePassword} className="mt-4 space-y-3 max-w-sm">
+            <div>
+              <label className="label" htmlFor="new_password">New password</label>
+              <input
+                id="new_password"
+                name="new_password"
+                type="password"
+                required
+                minLength={6}
+                className="input"
+                placeholder="••••••••"
+                autoComplete="new-password"
+              />
+              <p className="text-[11px] text-ink-soft mt-1">At least 6 characters.</p>
+            </div>
+            <div>
+              <label className="label" htmlFor="confirm_password">Confirm new password</label>
+              <input
+                id="confirm_password"
+                name="confirm_password"
+                type="password"
+                required
+                minLength={6}
+                className="input"
+                placeholder="••••••••"
+                autoComplete="new-password"
+              />
+            </div>
+
+            {pwError && (
+              <div className="p-2 bg-error/10 border-[1.5px] border-error text-error text-sm rounded font-medium">
+                ⚠️ {pwError}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <button type="submit" disabled={pending} className="btn flex-1">
+                {pending ? "Saving…" : "Save new password"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setChangingPw(false); setPwError(null); }}
+                disabled={pending}
+                className="btn btn-ghost flex-1"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

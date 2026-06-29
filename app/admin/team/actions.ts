@@ -333,18 +333,15 @@ export async function resendInvite(
 /**
  * Set (or reset) an employee's password DIRECTLY — no email, no link.
  *
- * This is the simplest, most reliable way to onboard people or fix a
- * locked-out account: the admin sets a temporary password and hands it
- * to the employee (in person, over chat, however). The employee logs in
- * at hub.dsvdigital.com with their email + this password immediately.
- * They can change it later from their profile.
+ * The simplest, most reliable way to onboard people or fix a locked-out
+ * account: the admin sets a temporary password and hands it to the
+ * employee. They log in at hub.dsvdigital.com with email + this password
+ * immediately, then can change it from their profile.
  *
  * Sidesteps the entire email/PKCE/token_hash flow and its cross-browser
- * fragility. Uses the service-role admin API to set the password on the
- * auth user.
+ * fragility. Uses the service-role admin API.
  *
- * If `password` is omitted, a readable temporary one is generated and
- * returned so the admin can copy it.
+ * If `password` is omitted, a readable temporary one is generated.
  */
 export async function setEmployeePassword(
   employeeId: string,
@@ -355,7 +352,6 @@ export async function setEmployeePassword(
 
   if (!employeeId) return { error: "Missing employee id" };
 
-  // Look up the employee's email + auth user id
   const { data: profile, error: profErr } = await admin
     .from("profiles")
     .select("id, email, name")
@@ -367,17 +363,15 @@ export async function setEmployeePassword(
     return { error: "This employee has no real email yet. Add one via Edit first." };
   }
 
-  // Generate a readable temp password if none provided
   const finalPassword = password?.trim() || generateTempPassword();
   if (finalPassword.length < 6) {
     return { error: "Password must be at least 6 characters" };
   }
 
-  // The profile id IS the auth user id (they share the same UUID via the
-  // handle_new_user trigger), so we can update the auth user directly.
+  // The profile id IS the auth user id (shared UUID via handle_new_user).
   const { error: updErr } = await admin.auth.admin.updateUserById(employeeId, {
     password: finalPassword,
-    email_confirm: true, // ensure the account is confirmed so they can log in
+    email_confirm: true,
   });
 
   if (updErr) {
@@ -387,10 +381,7 @@ export async function setEmployeePassword(
   return { ok: true, password: finalPassword, email: profile.email };
 }
 
-/**
- * Generate a readable temporary password like "Bright-Tiger-3947".
- * Easy to read aloud / type, but random enough for a temp credential.
- */
+/** Generate a readable temp password like "Bright-Tiger-3947". */
 function generateTempPassword(): string {
   const adjectives = [
     "Bright", "Swift", "Calm", "Bold", "Clever", "Sunny", "Lucky", "Brave",
@@ -402,7 +393,7 @@ function generateTempPassword(): string {
   ];
   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
-  const num = Math.floor(1000 + Math.random() * 9000); // 4 digits
+  const num = Math.floor(1000 + Math.random() * 9000);
   return `${adj}-${noun}-${num}`;
 }
 
@@ -509,5 +500,39 @@ export async function updateMyProfile(formData: FormData): Promise<
 
   revalidatePath("/profile");
   revalidatePath("/today");
+  return { ok: true };
+}
+
+/**
+ * Let a signed-in employee change their own password.
+ *
+ * This is the easy case: they already have an active session (they
+ * logged in with whatever password the admin gave them), so we can
+ * call auth.updateUser({ password }) directly. No email, no recovery
+ * link, no PKCE — none of the cross-browser fragility.
+ *
+ * Used by anyone who was handed an initial password and wants to set
+ * their own, or who just wants to rotate their password periodically.
+ */
+export async function changeMyPassword(formData: FormData): Promise<
+  { ok: true } | { error: string }
+> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const newPassword = String(formData.get("new_password") || "");
+  const confirm = String(formData.get("confirm_password") || "");
+
+  if (newPassword.length < 6) {
+    return { error: "New password must be at least 6 characters" };
+  }
+  if (newPassword !== confirm) {
+    return { error: "The two passwords don't match" };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { error: error.message };
+
   return { ok: true };
 }

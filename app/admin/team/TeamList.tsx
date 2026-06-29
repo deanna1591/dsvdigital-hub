@@ -46,7 +46,6 @@ export default function TeamList({
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  // Password-set modal: holds the employee + the resulting credential
   const [pwEmployee, setPwEmployee] = useState<Employee | null>(null);
   const [pwResult, setPwResult] = useState<{ email: string; password: string } | null>(null);
   const [pwCustom, setPwCustom] = useState("");
@@ -164,15 +163,9 @@ export default function TeamList({
     if (!pwEmployee) return;
     setError(null);
     startTransition(async () => {
-      const res = await setEmployeePassword(
-        pwEmployee.id,
-        useCustom ? pwCustom : undefined,
-      );
-      if ("error" in res) {
-        setError(res.error);
-      } else {
-        setPwResult({ email: res.email, password: res.password });
-      }
+      const res = await setEmployeePassword(pwEmployee.id, useCustom ? pwCustom : undefined);
+      if ("error" in res) setError(res.error);
+      else setPwResult({ email: res.email, password: res.password });
     });
   }
 
@@ -255,7 +248,7 @@ export default function TeamList({
                       minLength={6}
                     />
                     <p className="text-[11px] text-ink-soft mt-1">
-                      At least 6 characters. Or leave blank and we'll generate a memorable one.
+                      At least 6 characters. Or leave blank and we&apos;ll generate a memorable one.
                     </p>
                   </div>
 
@@ -266,11 +259,7 @@ export default function TeamList({
                   )}
 
                   <div className="flex gap-2 justify-end pt-1">
-                    <button
-                      className="btn btn-ghost"
-                      onClick={() => setPwEmployee(null)}
-                      disabled={pending}
-                    >
+                    <button className="btn btn-ghost" onClick={() => setPwEmployee(null)} disabled={pending}>
                       Cancel
                     </button>
                     {pwCustom.trim() ? (
@@ -302,7 +291,7 @@ export default function TeamList({
                     <button
                       className="btn btn-ghost"
                       onClick={() => {
-                        const text = `DSV Digital Hub login:\n${"https://hub.dsvdigital.com/login"}\nEmail: ${pwResult.email}\nPassword: ${pwResult.password}`;
+                        const text = `DSV Digital Hub login:\nhttps://hub.dsvdigital.com/login\nEmail: ${pwResult.email}\nPassword: ${pwResult.password}`;
                         navigator.clipboard.writeText(text);
                         showToast("✓ Copied all login details");
                       }}
