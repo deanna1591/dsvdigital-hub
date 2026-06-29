@@ -1,44 +1,83 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
 
 /**
- * Auth callback route — exchanges the PKCE `code` param for a session.
+ * Auth callback route — establishes a session from an email link.
  *
- * Supabase email links (recovery, invite, magic link) all redirect here with
- *   ?code=<one-time-code>&next=<destination-path>
+ * Supports BOTH mechanisms Supabase can use:
  *
- * The handler:
- *   1. Reads the code from the URL.
- *   2. Calls supabase.auth.exchangeCodeForSession(code) which sets the
- *      auth cookies on the response (handled by @supabase/ssr).
- *   3. Redirects the user to the `next` destination, now with an active
- *      session so the destination page can update password, etc.
+ *  A) token_hash + type  (OTP verification — the robust path)
+ *     Works in ANY browser/device because it doesn't depend on a
+ *     locally-stored PKCE verifier cookie. This is what admin-initiated
+ *     resets need, since the admin requests the link in one browser and
+ *     the employee clicks it in another.
  *
- * If the code is missing or expired, redirects to /login with an error.
+ *  B) code  (PKCE flow — only works in the SAME browser that requested it)
+ *     Kept as a fallback for self-service "forgot password" where the
+ *     same person requests and clicks.
+ *
+ * After establishing the session, redirects to `next`.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/login/update-password";
 
-  if (!code) {
+  // Upstream error passthrough (expired/used/invalid)
+  const errorParam = searchParams.get("error");
+  if (errorParam) {
+    const desc = searchParams.get("error_description") || "";
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent("Recovery link is missing its security code. Request a new one.")}`,
+      `${origin}/login/forgot-password?error=${encodeURIComponent(friendlyAuthError(errorParam, desc))}`,
     );
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/today";
 
-  if (error) {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(
-        `Recovery link is invalid or expired (${error.message}). Request a new one.`,
-      )}`,
-    );
+  // --- Path A: token_hash + type (OTP) ---
+  const token_hash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
+  if (token_hash && type) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash, type });
+    if (error) {
+      return NextResponse.redirect(
+        `${origin}/login/forgot-password?error=${encodeURIComponent(friendlyAuthError("access_denied", error.message))}`,
+      );
+    }
+    return NextResponse.redirect(`${origin}${safeNext}`);
   }
 
-  // Validate `next` is a safe relative path (no protocol-relative or external)
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/today";
-  return NextResponse.redirect(`${origin}${safeNext}`);
+  // --- Path B: code (PKCE) ---
+  const code = searchParams.get("code");
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return NextResponse.redirect(
+        `${origin}/login/forgot-password?error=${encodeURIComponent(friendlyAuthError("access_denied", error.message))}`,
+      );
+    }
+    return NextResponse.redirect(`${origin}${safeNext}`);
+  }
+
+  // Neither present
+  return NextResponse.redirect(
+    `${origin}/login/forgot-password?error=${encodeURIComponent(
+      "Recovery link is missing its token. Request a new one below.",
+    )}`,
+  );
+}
+
+function friendlyAuthError(code: string, desc: string): string {
+  const d = desc.toLowerCase();
+  if (d.includes("verifier") || d.includes("storage")) {
+    return "This reset link must be opened in the same browser flow. We've switched to a more reliable link — request a fresh one below and it'll work from any device.";
+  }
+  if (code === "access_denied" || d.includes("expired")) {
+    return "This reset link expired or was already used. Enter your email below to get a fresh one (links last 1 hour and can only be used once).";
+  }
+  if (d.includes("not allowed") || d.includes("redirect")) {
+    return "Recovery redirect URL isn't allowed. Tell your admin to check Supabase's redirect URL allow list.";
+  }
+  return desc || `Recovery error: ${code}. Request a new link below.`;
 }
