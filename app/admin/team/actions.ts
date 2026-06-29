@@ -331,6 +331,82 @@ export async function resendInvite(
 }
 
 /**
+ * Set (or reset) an employee's password DIRECTLY — no email, no link.
+ *
+ * This is the simplest, most reliable way to onboard people or fix a
+ * locked-out account: the admin sets a temporary password and hands it
+ * to the employee (in person, over chat, however). The employee logs in
+ * at hub.dsvdigital.com with their email + this password immediately.
+ * They can change it later from their profile.
+ *
+ * Sidesteps the entire email/PKCE/token_hash flow and its cross-browser
+ * fragility. Uses the service-role admin API to set the password on the
+ * auth user.
+ *
+ * If `password` is omitted, a readable temporary one is generated and
+ * returned so the admin can copy it.
+ */
+export async function setEmployeePassword(
+  employeeId: string,
+  password?: string,
+): Promise<{ ok: true; password: string; email: string } | { error: string }> {
+  await requireAdmin();
+  const admin = createAdminClient();
+
+  if (!employeeId) return { error: "Missing employee id" };
+
+  // Look up the employee's email + auth user id
+  const { data: profile, error: profErr } = await admin
+    .from("profiles")
+    .select("id, email, name")
+    .eq("id", employeeId)
+    .single();
+
+  if (profErr || !profile) return { error: "Employee not found" };
+  if (!profile.email || profile.email.endsWith("@placeholder.invalid")) {
+    return { error: "This employee has no real email yet. Add one via Edit first." };
+  }
+
+  // Generate a readable temp password if none provided
+  const finalPassword = password?.trim() || generateTempPassword();
+  if (finalPassword.length < 6) {
+    return { error: "Password must be at least 6 characters" };
+  }
+
+  // The profile id IS the auth user id (they share the same UUID via the
+  // handle_new_user trigger), so we can update the auth user directly.
+  const { error: updErr } = await admin.auth.admin.updateUserById(employeeId, {
+    password: finalPassword,
+    email_confirm: true, // ensure the account is confirmed so they can log in
+  });
+
+  if (updErr) {
+    return { error: `Couldn't set password: ${updErr.message}` };
+  }
+
+  return { ok: true, password: finalPassword, email: profile.email };
+}
+
+/**
+ * Generate a readable temporary password like "Bright-Tiger-3947".
+ * Easy to read aloud / type, but random enough for a temp credential.
+ */
+function generateTempPassword(): string {
+  const adjectives = [
+    "Bright", "Swift", "Calm", "Bold", "Clever", "Sunny", "Lucky", "Brave",
+    "Gentle", "Happy", "Kind", "Quick", "Sharp", "Smart", "Warm",
+  ];
+  const nouns = [
+    "Tiger", "Eagle", "River", "Mountain", "Ocean", "Forest", "Falcon",
+    "Comet", "Harbor", "Meadow", "Canyon", "Summit", "Garden", "Island",
+  ];
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  const num = Math.floor(1000 + Math.random() * 9000); // 4 digits
+  return `${adj}-${noun}-${num}`;
+}
+
+/**
  * Toggle an employee between 'admin' and 'employee' roles.
  *
  * Safeguards:

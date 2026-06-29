@@ -9,6 +9,7 @@ import {
   reactivateEmployee,
   resendInvite,
   toggleAdminRole,
+  setEmployeePassword,
 } from "./actions";
 import type { Employee } from "./page";
 
@@ -45,6 +46,10 @@ export default function TeamList({
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // Password-set modal: holds the employee + the resulting credential
+  const [pwEmployee, setPwEmployee] = useState<Employee | null>(null);
+  const [pwResult, setPwResult] = useState<{ email: string; password: string } | null>(null);
+  const [pwCustom, setPwCustom] = useState("");
 
   const filtered = employees.filter((e) => {
     if (filter === "active" && !e.is_active) return false;
@@ -148,6 +153,29 @@ export default function TeamList({
     });
   }
 
+  function openPasswordModal(emp: Employee) {
+    setError(null);
+    setPwResult(null);
+    setPwCustom("");
+    setPwEmployee(emp);
+  }
+
+  function handleSetPassword(useCustom: boolean) {
+    if (!pwEmployee) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await setEmployeePassword(
+        pwEmployee.id,
+        useCustom ? pwCustom : undefined,
+      );
+      if ("error" in res) {
+        setError(res.error);
+      } else {
+        setPwResult({ email: res.email, password: res.password });
+      }
+    });
+  }
+
   return (
     <div>
       {/* Toolbar */}
@@ -189,6 +217,106 @@ export default function TeamList({
       {toast && (
         <div className="fixed top-4 right-4 z-[200] bg-graphite text-paper px-4 py-2 rounded-y2k shadow-[3px_3px_0_#E6ABE1] font-bold text-sm">
           {toast}
+        </div>
+      )}
+
+      {/* Set-password modal */}
+      {pwEmployee && (
+        <div
+          className="fixed inset-0 bg-graphite/60 flex items-center justify-center z-[150] p-5"
+          onClick={() => !pending && setPwEmployee(null)}
+        >
+          <div
+            className="bg-paper rounded-y2k max-w-md w-full border-[1.5px] border-graphite overflow-hidden shadow-[4px_4px_0_#272727]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 pt-4 pb-3 border-b-[1.5px] border-graphite bg-cream">
+              <h3 className="font-serif text-lg font-semibold">Set password — {pwEmployee.name}</h3>
+            </div>
+
+            <div className="px-5 py-4 space-y-4">
+              {!pwResult ? (
+                <>
+                  <p className="text-sm text-ink-soft">
+                    Set a password for <strong>{pwEmployee.email}</strong>. Hand it to them and
+                    they can sign in right away — no email needed. They can change it later from
+                    their profile.
+                  </p>
+
+                  <div>
+                    <label className="label" htmlFor="pw-custom">Custom password (optional)</label>
+                    <input
+                      id="pw-custom"
+                      type="text"
+                      value={pwCustom}
+                      onChange={(e) => setPwCustom(e.target.value)}
+                      className="input"
+                      placeholder="Leave blank to auto-generate"
+                      minLength={6}
+                    />
+                    <p className="text-[11px] text-ink-soft mt-1">
+                      At least 6 characters. Or leave blank and we'll generate a memorable one.
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="p-2 bg-error/10 border-[1.5px] border-error text-error text-sm rounded font-medium">
+                      ⚠️ {error}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 justify-end pt-1">
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => setPwEmployee(null)}
+                      disabled={pending}
+                    >
+                      Cancel
+                    </button>
+                    {pwCustom.trim() ? (
+                      <button className="btn" onClick={() => handleSetPassword(true)} disabled={pending}>
+                        {pending ? "Setting…" : "Set this password"}
+                      </button>
+                    ) : (
+                      <button className="btn" onClick={() => handleSetPassword(false)} disabled={pending}>
+                        {pending ? "Generating…" : "Generate & set"}
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 bg-good/10 border-[1.5px] border-good rounded-y2k">
+                    <p className="text-sm font-bold text-good mb-2">✓ Password set! Share these with {pwEmployee.name}:</p>
+                    <div className="space-y-2">
+                      <CredentialRow label="Login URL" value="https://hub.dsvdigital.com/login" />
+                      <CredentialRow label="Email" value={pwResult.email} />
+                      <CredentialRow label="Password" value={pwResult.password} big />
+                    </div>
+                  </div>
+                  <p className="text-[12px] text-ink-soft italic">
+                    Tip: copy all three and send them in one message. They can change the password
+                    anytime from their profile after logging in.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => {
+                        const text = `DSV Digital Hub login:\n${"https://hub.dsvdigital.com/login"}\nEmail: ${pwResult.email}\nPassword: ${pwResult.password}`;
+                        navigator.clipboard.writeText(text);
+                        showToast("✓ Copied all login details");
+                      }}
+                    >
+                      📋 Copy all
+                    </button>
+                    <button className="btn" onClick={() => setPwEmployee(null)}>
+                      Done
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -265,11 +393,21 @@ export default function TeamList({
                 </button>
                 {emp.is_active && emp.email && !emp.email.endsWith("@placeholder.invalid") && (
                   <button
+                    onClick={() => openPasswordModal(emp)}
+                    disabled={pending}
+                    className="font-bold text-graphite underline-offset-2 hover:underline"
+                    title="Set a password directly — no email needed"
+                  >
+                    🔑 Set password
+                  </button>
+                )}
+                {emp.is_active && emp.email && !emp.email.endsWith("@placeholder.invalid") && (
+                  <button
                     onClick={() => handleResend(emp)}
                     disabled={pending}
                     className="font-bold text-bronze underline-offset-2 hover:underline"
                   >
-                    📧 Resend invite
+                    📧 Email link
                   </button>
                 )}
                 {/* Admin role toggle — hidden for self (can't toggle own status) */}
@@ -543,4 +681,24 @@ function formatDate(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function CredentialRow({ label, value, big }: { label: string; value: string; big?: boolean }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] tracking-[0.1em] uppercase font-bold text-ink-soft w-20 shrink-0">
+        {label}
+      </span>
+      <code className={`flex-1 bg-paper border border-line rounded px-2 py-1 ${big ? "text-base font-bold" : "text-sm"} break-all`}>
+        {value}
+      </code>
+      <button
+        onClick={() => navigator.clipboard.writeText(value)}
+        className="text-bronze text-xs font-bold hover:underline shrink-0"
+        title="Copy"
+      >
+        copy
+      </button>
+    </div>
+  );
 }
