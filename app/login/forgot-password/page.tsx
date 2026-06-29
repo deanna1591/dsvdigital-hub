@@ -1,14 +1,6 @@
-import { login, signup } from "./actions";
+import { requestPasswordReset } from "../actions";
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; message?: string }>;
-}) {
-  return <LoginForm searchParams={searchParams} />;
-}
-
-async function LoginForm({
+export default async function ForgotPasswordPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; message?: string }>;
@@ -16,13 +8,10 @@ async function LoginForm({
   const params = await searchParams;
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-cotton relative overflow-hidden">
-      {/* Decorative Y2K blobs */}
       <div className="absolute top-10 left-10 w-60 h-60 bg-lavender/30 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-bubblegum/40 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 right-1/4 w-48 h-48 bg-goldrush/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative">
-        {/* Logo */}
         <div className="flex flex-col items-center gap-3 mb-8">
           <div className="w-24 h-24 bg-paper rounded-2xl border-[1.5px] border-graphite shadow-[4px_4px_0_#E8B044] flex items-center justify-center p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -30,16 +19,14 @@ async function LoginForm({
           </div>
           <div className="text-center">
             <h1 className="font-serif text-2xl font-semibold tracking-tight">DSV Digital Hub</h1>
-            <p className="text-[10px] tracking-[0.18em] uppercase text-ink-soft font-bold">
-              Points · Engagement
-            </p>
           </div>
         </div>
 
-        {/* Sign-in card */}
         <div className="bg-paper border-[1.5px] border-graphite rounded-y2k p-7 sm:p-8 shadow-[6px_6px_0_#E6ABE1]">
-          <h2 className="font-serif text-2xl font-semibold mb-1">Welcome back 👋</h2>
-          <p className="text-sm text-ink-soft mb-6">Sign in with your work email.</p>
+          <h2 className="font-serif text-2xl font-semibold mb-1">Reset your password</h2>
+          <p className="text-sm text-ink-soft mb-6">
+            Enter your work email and we'll send you a link to set a new password.
+          </p>
 
           {params.error && (
             <div className="mb-4 p-3 bg-error/10 border-[1.5px] border-error text-error text-sm rounded-lg font-medium">
@@ -52,7 +39,7 @@ async function LoginForm({
             </div>
           )}
 
-          <form className="space-y-4">
+          <form action={requestPasswordReset} className="space-y-4">
             <div>
               <label className="label" htmlFor="email">Email</label>
               <input
@@ -65,38 +52,24 @@ async function LoginForm({
                 autoComplete="email"
               />
             </div>
-            <div>
-              <label className="label" htmlFor="password">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="input"
-                placeholder="••••••••"
-                minLength={6}
-                autoComplete="current-password"
-              />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button formAction={login} className="btn flex-1">Sign in</button>
-              <button formAction={signup} className="btn btn-ghost flex-1">Create account</button>
-            </div>
+            <button type="submit" className="btn w-full">
+              Send reset link
+            </button>
           </form>
 
           <div className="mt-4 pt-4 border-t border-line">
             <a
-              href="/login/forgot-password"
+              href="/login"
               className="text-xs text-bronze font-bold underline-offset-2 hover:underline"
             >
-              Forgot your password? →
+              ← Back to sign in
             </a>
           </div>
         </div>
 
         <p className="text-xs text-center text-ink-soft mt-6 leading-relaxed">
-          New here? Create an account with your work email.<br />
-          An admin will activate your access.
+          First time signing in? Your admin set up your account.<br />
+          Use the reset link to create your password.
         </p>
       </div>
     </div>

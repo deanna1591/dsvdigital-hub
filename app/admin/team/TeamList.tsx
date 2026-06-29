@@ -122,7 +122,11 @@ export default function TeamList({
     startTransition(async () => {
       const res = await resendInvite(emp.email!);
       if ("error" in res) setError(res.error);
-      else showToast("✓ Invite resent");
+      else if (res.method === "invite") {
+        showToast("✓ Invite sent");
+      } else {
+        showToast("✓ Password reset link sent");
+      }
     });
   }
 

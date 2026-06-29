@@ -271,16 +271,55 @@ export async function reactivateEmployee(
 }
 
 /**
- * Resend the invite email to someone who hasn't accepted yet.
+ * Smart "resend invite" — does the right thing based on whether the
+ * user already exists in auth.users:
+ *
+ *   - Net-new email: sends a Supabase invite (magic link to set password).
+ *   - Already exists (e.g. created silently via bulk-add, or invited
+ *     before): sends a password recovery email so they can set/reset
+ *     their password.
+ *
+ * This makes the button "just work" regardless of how the user was
+ * originally added.
  */
 export async function resendInvite(
   email: string,
-): Promise<{ ok: true } | { error: string }> {
+): Promise<{ ok: true; method: "invite" | "recovery" } | { error: string }> {
   await requireAdmin();
   const admin = createAdminClient();
-  const { error } = await admin.auth.admin.inviteUserByEmail(email);
-  if (error) return { error: error.message };
-  return { ok: true };
+
+  // Try invite first (works for new emails)
+  const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email);
+
+  if (!inviteErr) {
+    return { ok: true, method: "invite" };
+  }
+
+  // If the error says they already exist, fall back to password reset.
+  // Supabase's error message varies by version; check for common patterns.
+  const msg = inviteErr.message?.toLowerCase() ?? "";
+  const alreadyExists =
+    msg.includes("already") ||
+    msg.includes("registered") ||
+    (inviteErr as { code?: string }).code === "email_exists";
+
+  if (!alreadyExists) {
+    return { error: inviteErr.message || "Couldn't send invite" };
+  }
+
+  // Send password recovery instead — works for existing users with no
+  // password set, or anyone who forgot theirs.
+  const userClient = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hub.dsvdigital.com";
+  const { error: resetErr } = await userClient.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/login/update-password`,
+  });
+
+  if (resetErr) {
+    return { error: `Couldn't send password reset: ${resetErr.message}` };
+  }
+
+  return { ok: true, method: "recovery" };
 }
 
 /**
