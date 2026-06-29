@@ -8,6 +8,7 @@ import {
   deactivateEmployee,
   reactivateEmployee,
   resendInvite,
+  toggleAdminRole,
 } from "./actions";
 import type { Employee } from "./page";
 
@@ -29,7 +30,13 @@ const STATUS_PILL: Record<string, string> = {
   former: "bg-line text-ink-soft",
 };
 
-export default function TeamList({ employees }: { employees: Employee[] }) {
+export default function TeamList({
+  employees,
+  currentUserId,
+}: {
+  employees: Employee[];
+  currentUserId: string;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [inviting, setInviting] = useState(false);
@@ -116,6 +123,24 @@ export default function TeamList({ employees }: { employees: Employee[] }) {
       const res = await resendInvite(emp.email!);
       if ("error" in res) setError(res.error);
       else showToast("✓ Invite resent");
+    });
+  }
+
+  function handleToggleAdmin(emp: Employee) {
+    const becomingAdmin = emp.role !== "admin";
+    const verb = becomingAdmin ? "Grant" : "Remove";
+    const consequence = becomingAdmin
+      ? `\n\n${emp.name} will be able to:\n• Invite/edit/deactivate employees\n• Award and revoke points\n• Approve redemptions and claims\n• Edit sparks, bingo, missions, and the catalog\n• See all team data including this page`
+      : `\n\n${emp.name} will lose all admin access immediately and only see the employee view.`;
+    if (!confirm(`${verb} admin access for ${emp.name}?${consequence}`)) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await toggleAdminRole(emp.id);
+      if ("error" in res) setError(res.error);
+      else {
+        showToast(res.newRole === "admin" ? `✓ ${emp.name} is now admin` : `✓ ${emp.name} is now employee`);
+        router.refresh();
+      }
     });
   }
 
@@ -241,6 +266,23 @@ export default function TeamList({ employees }: { employees: Employee[] }) {
                     className="font-bold text-bronze underline-offset-2 hover:underline"
                   >
                     📧 Resend invite
+                  </button>
+                )}
+                {/* Admin role toggle — hidden for self (can't toggle own status) */}
+                {emp.is_active && emp.id !== currentUserId && (
+                  <button
+                    onClick={() => handleToggleAdmin(emp)}
+                    disabled={pending}
+                    className={`font-bold underline-offset-2 hover:underline ${
+                      emp.role === "admin" ? "text-error" : "text-good"
+                    }`}
+                    title={
+                      emp.role === "admin"
+                        ? "Demote to regular employee"
+                        : "Promote to admin"
+                    }
+                  >
+                    {emp.role === "admin" ? "🔓 Remove admin" : "🔐 Make admin"}
                   </button>
                 )}
                 {emp.is_active ? (

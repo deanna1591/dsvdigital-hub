@@ -284,6 +284,67 @@ export async function resendInvite(
 }
 
 /**
+ * Toggle an employee between 'admin' and 'employee' roles.
+ *
+ * Safeguards:
+ *   1. Admin can't toggle themselves (prevents accidental self-lockout).
+ *   2. Can't remove admin role from the LAST remaining admin (would
+ *      lock everyone out of /admin entirely).
+ *   3. Caller must be admin (enforced by requireAdmin).
+ */
+export async function toggleAdminRole(
+  employeeId: string,
+): Promise<{ ok: true; newRole: "admin" | "employee" } | { error: string }> {
+  const { user } = await requireAdmin();
+  const admin = createAdminClient();
+
+  if (!employeeId) return { error: "Missing employee id" };
+  if (employeeId === user.id) {
+    return { error: "You can't change your own admin status. Ask another admin to do it." };
+  }
+
+  // Fetch the target's current role
+  const { data: target, error: fetchErr } = await admin
+    .from("profiles")
+    .select("role, name, is_active")
+    .eq("id", employeeId)
+    .single();
+
+  if (fetchErr || !target) return { error: "Employee not found" };
+  if (!target.is_active) {
+    return { error: "Can't change admin status on a deactivated account. Reactivate first." };
+  }
+
+  const currentRole = target.role as "admin" | "employee";
+  const newRole: "admin" | "employee" = currentRole === "admin" ? "employee" : "admin";
+
+  // If demoting an admin, make sure there's at least one other active admin
+  if (currentRole === "admin") {
+    const { count } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin")
+      .eq("is_active", true);
+    if ((count ?? 0) <= 1) {
+      return {
+        error:
+          "Can't remove admin from the last admin — the portal needs at least one. Promote someone else first.",
+      };
+    }
+  }
+
+  const { error: updErr } = await admin
+    .from("profiles")
+    .update({ role: newRole })
+    .eq("id", employeeId);
+
+  if (updErr) return { error: updErr.message };
+
+  revalidatePath("/admin/team");
+  return { ok: true, newRole };
+}
+
+/**
  * Employee self-update of their own photo + phone (only).
  * Other fields require admin.
  */

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import TeamList from "./TeamList";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,8 @@ export type Employee = {
 
 export default async function AdminTeamPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const { data } = await supabase
     .from("profiles")
@@ -45,7 +48,7 @@ export default async function AdminTeamPage() {
         </a>
       </div>
 
-      <TeamList employees={employees} />
+      <TeamList employees={employees} currentUserId={user.id} />
     </main>
   );
 }
