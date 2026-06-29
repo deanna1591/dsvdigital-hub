@@ -53,11 +53,12 @@ export async function requestPasswordReset(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent("Email is required")}`);
   }
 
-  // Build absolute URL for the reset callback
+  // Build absolute URL for the auth callback (which exchanges the PKCE
+  // code and then redirects to /login/update-password with an active session)
   const h = await headers();
   const host = h.get("host") || "hub.dsvdigital.com";
   const proto = h.get("x-forwarded-proto") || "https";
-  const redirectTo = `${proto}://${host}/login/update-password`;
+  const redirectTo = `${proto}://${host}/auth/callback?next=/login/update-password`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) {
@@ -97,6 +98,8 @@ export async function updatePassword(formData: FormData) {
     redirect(`/login/update-password?error=${encodeURIComponent(error.message)}`);
   }
 
+  // User is already authenticated via the recovery session — drop them
+  // straight into the app rather than bouncing through /login again.
   revalidatePath("/", "layout");
-  redirect(`/login?message=${encodeURIComponent("Password updated — sign in with your new password.")}`);
+  redirect("/today?welcome=1");
 }

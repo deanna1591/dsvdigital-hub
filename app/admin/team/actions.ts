@@ -72,10 +72,14 @@ export async function inviteEmployee(formData: FormData): Promise<
 
   // Send invite (creates the auth.users row + triggers profile creation)
   let inviteData: Awaited<ReturnType<typeof admin.auth.admin.inviteUserByEmail>>["data"] | null = null;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hub.dsvdigital.com";
+  const inviteRedirectTo = `${siteUrl}/auth/callback?next=/login/update-password`;
+
   let inviteErr: unknown = null;
   try {
     const res = await admin.auth.admin.inviteUserByEmail(email, {
       data: { name },
+      redirectTo: inviteRedirectTo,
     });
     inviteData = res.data;
     inviteErr = res.error;
@@ -288,8 +292,13 @@ export async function resendInvite(
   await requireAdmin();
   const admin = createAdminClient();
 
-  // Try invite first (works for new emails)
-  const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hub.dsvdigital.com";
+  const redirectTo = `${siteUrl}/auth/callback?next=/login/update-password`;
+
+  // Try invite first (works for net-new emails)
+  const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo,
+  });
 
   if (!inviteErr) {
     return { ok: true, method: "invite" };
@@ -310,9 +319,8 @@ export async function resendInvite(
   // Send password recovery instead — works for existing users with no
   // password set, or anyone who forgot theirs.
   const userClient = await createClient();
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hub.dsvdigital.com";
   const { error: resetErr } = await userClient.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/login/update-password`,
+    redirectTo,
   });
 
   if (resetErr) {
