@@ -41,22 +41,15 @@ export default async function BingoPage() {
     );
   }
 
-  const [squaresRes, claimsRes] = await Promise.all([
-    supabase
-      .from("bingo_board_squares")
-      .select("*")
-      .eq("board_id", board.id),
-    supabase
-      .from("bingo_board_claims")
-      .select("*")
-      .eq("employee_id", userId)
-      .in("square_id", []),  // placeholder, will refine below
-  ]);
+  const squaresRes = await supabase
+    .from("bingo_board_squares")
+    .select("*")
+    .eq("board_id", board.id);
 
   const squares = (squaresRes.data ?? []) as BingoBoardSquareRow[];
   const squareIds = squares.map((s) => s.id);
 
-  // Refetch claims now we know square IDs
+  // Fetch this employee's claims for the squares on this board
   const { data: claimsData } = await supabase
     .from("bingo_board_claims")
     .select("*")
